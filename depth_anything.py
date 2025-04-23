@@ -54,20 +54,20 @@ class DepthAnythingV2:
 if __name__ == '__main__':
     from utils import VideoCap
 
-    c2d = DepthAnythingV2("vits")
+    model = DepthAnythingV2("vits")
 
     # Infer a single image
     color = cv2.imread("assets/color.png")
     depth = cv2.imread("assets/depth.png", cv2.IMREAD_UNCHANGED) / 5000
     cv2.imshow("Depth", rendered_depth(depth))
-    cv2.imshow("Pred", rendered_depth(c2d(color, depth)))
+    cv2.imshow("Pred", rendered_depth(model(color, depth)))
     cv2.waitKey(0)
 
     # Infer a video stream
     srcs = VideoCap(0)
     for color in srcs:
         t0 = time.time()
-        depth = c2d(color)
+        depth = model(color)
         fps = 1 / (time.time() - t0)
         print(f"FPS: {fps:.2f}")
         cv2.imshow("Depth", rendered_depth(depth))
