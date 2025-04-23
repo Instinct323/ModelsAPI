@@ -25,7 +25,7 @@ def rectify_depth(pred: np.ndarray,
     s = (x_ * y_).mean() / np.square(x_).mean()
     b = ym - s * xm
     pred = s * pred + b
-    print(f"s={s}, MSE={np.square(pred[mask] - y).mean()}", )
+    print(f"s={s}, max={pred.max()}, MSE={np.square(pred[mask] - y).mean()}", )
     return pred
 
 
@@ -61,7 +61,8 @@ if __name__ == '__main__':
 
     # Infer a single image
     color = cv2.imread("assets/color.png")
-    depth = cv2.imread("assets/depth.png", cv2.IMREAD_UNCHANGED) / 5000
+    depth = cv2.imread("assets/depth.png", cv2.IMREAD_UNCHANGED).astype(np.float32)
+    depth[depth > 0] = 5000 / depth[depth > 0]
     cv2.imshow("Depth", rendered_depth(depth))
     cv2.imshow("Pred", rendered_depth(model(color, depth)))
     cv2.waitKey(0)
