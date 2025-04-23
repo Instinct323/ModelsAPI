@@ -24,7 +24,9 @@ def rectify_depth(pred: np.ndarray,
     x_, y_ = x - xm, y - ym
     s = (x_ * y_).mean() / np.square(x_).mean()
     b = ym - s * xm
-    return s * pred + b
+    pred = s * pred + b
+    print(f"s={s}, MSE={np.square(pred[mask] - y).mean()}", )
+    return pred
 
 
 class DepthAnythingV2:
@@ -47,6 +49,7 @@ class DepthAnythingV2:
         self.input_size = input_size
 
     def __call__(self, bgr: np.ndarray, depth: np.ndarray = None):
+        # Affine-invariant inverse depth
         pred = self.model.infer_image(bgr, self.input_size)
         return rectify_depth(pred, depth)
 
