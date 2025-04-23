@@ -25,7 +25,8 @@ def rectify_depth(pred: np.ndarray,
     s = (x_ * y_).mean() / np.square(x_).mean()
     b = ym - s * xm
     pred = s * pred + b
-    print(f"s={s}, max={pred.max()}, MSE={np.square(pred[mask] - y).mean()}", )
+    # for debug
+    print(f"s={s}, b={b}, max={pred.max()}, RMSE={np.sqrt(np.square(pred[mask] - y).mean())}", )
     return pred
 
 
