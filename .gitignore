@@ -1,0 +1,60 @@
+# Byte-compiled / optimized / DLL files
+__pycache__
+__openvino_cache__
+.ipynb_checkpoints
+~$*.*
+.~*.*
+
+# Environments
+desktop.ini
+.idea
+.vscode
+.clion.source.upload.marker
+
+# datasets and projects
+.DS_Store
+*test*
+*build*
+data
+log
+runs
+install
+
+# Neural Network weights 
+*.pt
+*.pth
+*.onnx
+*.pkf
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
