@@ -38,4 +38,5 @@ if __name__ == '__main__':
     devices = rs.context().query_devices()
     for i in devices: print(i)
 
-    rgbd_flow(640, 480)
+    for c, d in rgbd_flow(640, 480):
+        pass

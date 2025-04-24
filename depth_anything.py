@@ -33,7 +33,8 @@ def rectify_depth(pred: np.ndarray,
 
 
 class DepthAnythingV2:
-    """ :param encoder: Encoder type (vits, vitb, vitl, vitg)"""
+    """ https://github.com/DepthAnything/Depth-Anything-V2
+        :param encoder: Encoder type (vits, vitb, vitl, vitg)"""
 
     def __init__(self, encoder, input_size=518):
         from depth_anything_v2 import dpt
@@ -57,32 +58,35 @@ class DepthAnythingV2:
 
 
 if __name__ == '__main__':
-    from utils.zjcv import VideoCap, Pinhole
+    from utils.zjcv import Pinhole, RS_D435I
+    from utils.realsense import rgbd_flow
     import open3d as o3d
 
     model = DepthAnythingV2("vitb")
+    camera = Pinhole(**RS_D435I)
 
-    # Infer a single image
-    color = cv2.imread("assets/color.png")
-    depth = cv2.imread("assets/depth.png", cv2.IMREAD_UNCHANGED).astype(np.float32)
-    depth[depth > 0] = 5000 / depth[depth > 0]
-    cv2.imshow("Depth", rendered_depth(depth))
-    pred = model(color, depth)
-    cv2.imshow("Pred", rendered_depth(pred))
-    cv2.waitKey(0)
+    if 0:
+        # Infer a single image
+        color = cv2.imread("assets/color.png")
+        depth = cv2.imread("assets/depth.png", cv2.IMREAD_UNCHANGED).astype(np.float32)
+        depth[depth > 0] = 5000 / depth[depth > 0]
+        cv2.imshow("Depth", rendered_depth(depth))
+        pred = model(color, depth)
+        cv2.imshow("Pred", rendered_depth(pred))
+        cv2.waitKey(0)
 
-    # Depth to Point Cloud
-    h, w = depth.shape[:2]
-    camera = Pinhole(w, h, w * 2, h * 2, w / 2, h / 2)
-    pcd = camera.unproj(pred, color)
-    o3d.visualization.draw_geometries([pcd])
+        # Depth to Point Cloud
+        h, w = depth.shape[:2]
+        pcd = camera.unproj(pred, color)
+        o3d.visualization.draw_geometries([pcd])
 
     # Infer a video stream
-    srcs = VideoCap(0)
-    for color in srcs:
+    srcs = rgbd_flow(*camera.size)
+    for color, depth in srcs:
         t0 = time.time()
-        depth = model(color)
+        pred = model(color, depth)
         fps = 1 / (time.time() - t0)
         print(f"FPS: {fps:.2f}")
-        cv2.imshow("Depth", rendered_depth(depth))
-        cv2.waitKey(1)
+
+        o3d.visualization.draw_geometries([camera.unproj(pred, color)])
+        # cv2.imshow("Depth", rendered_depth(pred)), cv2.waitKey(1)

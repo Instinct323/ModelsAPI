@@ -5,6 +5,8 @@ import cv2
 import open3d as o3d
 import numpy as np
 
+RS_D435I = dict(w=640, h=480, fx=384.98394775390625, fy=384.98394775390625, cx=320.5026550292969, cy=240.8127899169922)
+
 
 class Pinhole:
 
