@@ -5,6 +5,8 @@ import matplotlib
 import numpy as np
 import torch
 
+DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+
 
 def rendered_depth(depth, cmap="Spectral_r"):
     cmap = matplotlib.colormaps.get_cmap(cmap)
@@ -32,7 +34,6 @@ def rectify_depth(pred: np.ndarray,
 
 class DepthAnythingV2:
     """ :param encoder: Encoder type (vits, vitb, vitl, vitg)"""
-    device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
     def __init__(self, encoder, input_size=518):
         from depth_anything_v2 import dpt
@@ -45,7 +46,7 @@ class DepthAnythingV2:
         }
         self.model = dpt.DepthAnythingV2(**model_configs[encoder])
         self.model.load_state_dict(torch.load(f'checkpoints/depth_anything_v2_{encoder}.pth', map_location='cpu'))
-        self.model = self.model.to(self.device).eval()
+        self.model = self.model.to(DEVICE).eval()
 
         self.input_size = input_size
 
