@@ -32,7 +32,7 @@ def rectify_depth(pred: np.ndarray,
 
 class DepthAnythingV2:
     """ :param encoder: Encoder type (vits, vitb, vitl, vitg)"""
-    DEVICE = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
+    device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
     def __init__(self, encoder, input_size=518):
         from depth_anything_v2 import dpt
@@ -45,7 +45,7 @@ class DepthAnythingV2:
         }
         self.model = dpt.DepthAnythingV2(**model_configs[encoder])
         self.model.load_state_dict(torch.load(f'checkpoints/depth_anything_v2_{encoder}.pth', map_location='cpu'))
-        self.model = self.model.to(self.DEVICE).eval()
+        self.model = self.model.to(self.device).eval()
 
         self.input_size = input_size
 
