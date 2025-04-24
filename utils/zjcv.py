@@ -2,8 +2,8 @@ from pathlib import Path
 from typing import Union
 
 import cv2
-import open3d as o3d
 import numpy as np
+import open3d as o3d
 
 RS_D435I = dict(w=640, h=480, fx=384.98394775390625, fy=384.98394775390625, cx=320.5026550292969, cy=240.8127899169922)
 
@@ -20,19 +20,20 @@ class Pinhole:
     def unproj(self,
                depth: np.ndarray,
                color: np.ndarray = None,
+               pcd: o3d.geometry.PointCloud = None,
                scale: float = 1.,
                max_depth: float = 5):
         assert depth.ndim == 2, f"Depth map should be 2D, but got {depth.ndim}D"
         mask = depth > scale / max_depth
-        pcd = np.concatenate([self.__unproj[mask], scale / depth[mask][..., None]], axis=-1)
-        pcd[:, :2] *= pcd[:, -1:]
+        points = np.concatenate([self.__unproj[mask], scale / depth[mask][..., None]], axis=-1)
+        points[:, :2] *= points[:, -1:]
         # Open3d
         if isinstance(color, np.ndarray):
-            ret = o3d.geometry.PointCloud()
-            ret.points = o3d.utility.Vector3dVector(pcd)
-            ret.colors = o3d.utility.Vector3dVector(color[mask] / 255)
-            pcd = ret
-        return pcd
+            pcd = pcd or o3d.geometry.PointCloud()
+            pcd.points = o3d.utility.Vector3dVector(points)
+            pcd.colors = o3d.utility.Vector3dVector(color[mask][:, ::-1] / 255)
+            points = pcd
+        return points
 
 
 class VideoCap(cv2.VideoCapture):

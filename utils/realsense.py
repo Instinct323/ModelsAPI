@@ -7,6 +7,10 @@ def frame2numpy(frame: rs.frame) -> np.ndarray:
     return np.asanyarray(frame.get_data())
 
 
+def get_intrinsics(frame: rs.frame):
+    return frame.profile.as_video_stream_profile().intrinsics
+
+
 def rgbd_flow(w, h, fps=30, show=True):
     cfg = rs.config()
     cfg.enable_stream(rs.stream.color, w, h, rs.format.rgb8, fps)

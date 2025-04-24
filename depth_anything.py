@@ -16,10 +16,11 @@ def rendered_depth(depth, cmap="Spectral_r"):
 
 
 def rectify_depth(pred: np.ndarray,
-                  depth: np.ndarray = None):
+                  depth: np.ndarray = None,
+                  max_depth: float = 5.0):
     if not isinstance(depth, np.ndarray): return pred
     assert depth.ndim == 2, f"Depth map should be 2D, but got {depth.ndim}D"
-    mask = depth > 0
+    mask = depth > 1 / max_depth
     x, y = pred[mask], depth[mask]
     # Linear least squares: Factorization
     xm, ym = x.mean(), y.mean()
@@ -51,10 +52,13 @@ class DepthAnythingV2:
 
         self.input_size = input_size
 
-    def __call__(self, bgr: np.ndarray, depth: np.ndarray = None):
+    def __call__(self,
+                 bgr: np.ndarray,
+                 depth: np.ndarray = None,
+                 max_depth: float = 5.0):
         # Affine-invariant inverse depth
         pred = self.model.infer_image(bgr, self.input_size)
-        return rectify_depth(pred, depth)
+        return rectify_depth(pred, depth, max_depth=max_depth)
 
 
 if __name__ == '__main__':
@@ -81,12 +85,28 @@ if __name__ == '__main__':
         o3d.visualization.draw_geometries([pcd])
 
     # Infer a video stream
-    srcs = rgbd_flow(*camera.size)
-    for color, depth in srcs:
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()
+    view_control = vis.get_view_control()
+    view_control.set_lookat([0, 0, -1])
+
+    pcd = o3d.geometry.PointCloud()
+    transform = np.eye(4)
+    transform[1, 1] = transform[2, 2] = -1
+
+    for color, depth in rgbd_flow(*camera.size):
+        depth = depth.astype(np.float64)
+        depth[depth > 0] = 1000 / depth[depth > 0]
+
         t0 = time.time()
-        pred = model(color, depth)
+        pred = model(color, depth, max_depth=3)
         fps = 1 / (time.time() - t0)
         print(f"FPS: {fps:.2f}")
 
-        o3d.visualization.draw_geometries([camera.unproj(pred, color)])
+        pcd = camera.unproj(pred, color, pcd=pcd, max_depth=3)
+        pcd.transform(transform)
+        vis.add_geometry(pcd)
+        vis.poll_events()
+        vis.update_renderer()
         # cv2.imshow("Depth", rendered_depth(pred)), cv2.waitKey(1)
+    vis.destroy_window()
