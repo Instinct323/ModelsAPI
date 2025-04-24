@@ -56,7 +56,7 @@ class DepthAnythingV2:
 
 
 if __name__ == '__main__':
-    from utils import VideoCap
+    from utils.zjcv import VideoCap
 
     model = DepthAnythingV2("vits")
 
