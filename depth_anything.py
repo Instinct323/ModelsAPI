@@ -57,17 +57,25 @@ class DepthAnythingV2:
 
 
 if __name__ == '__main__':
-    from utils.zjcv import VideoCap
+    from utils.zjcv import VideoCap, Pinhole
+    import open3d as o3d
 
-    model = DepthAnythingV2("vits")
+    model = DepthAnythingV2("vitb")
 
     # Infer a single image
     color = cv2.imread("assets/color.png")
     depth = cv2.imread("assets/depth.png", cv2.IMREAD_UNCHANGED).astype(np.float32)
     depth[depth > 0] = 5000 / depth[depth > 0]
     cv2.imshow("Depth", rendered_depth(depth))
-    cv2.imshow("Pred", rendered_depth(model(color, depth)))
+    pred = model(color, depth)
+    cv2.imshow("Pred", rendered_depth(pred))
     cv2.waitKey(0)
+
+    # Depth to Point Cloud
+    h, w = depth.shape[:2]
+    camera = Pinhole(w, h, w * 2, h * 2, w / 2, h / 2)
+    pcd = camera.unproj(pred, color)
+    o3d.visualization.draw_geometries([pcd])
 
     # Infer a video stream
     srcs = VideoCap(0)

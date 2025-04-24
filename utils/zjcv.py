@@ -2,6 +2,35 @@ from pathlib import Path
 from typing import Union
 
 import cv2
+import open3d as o3d
+import numpy as np
+
+
+class Pinhole:
+
+    def __init__(self, w, h, fx, fy, cx, cy):
+        self.size = w, h
+        self.intrinsic = np.array([fx, fy, cx, cy])
+        # cache for unprojection
+        self.__coords = np.stack(np.meshgrid(np.arange(w), np.arange(h)), axis=-1)
+        self.__unproj = (self.__coords - [cx, cy]) / [fx, fy]
+
+    def unproj(self,
+               depth: np.ndarray,
+               color: np.ndarray = None,
+               scale: float = 1.,
+               max_depth: float = 5):
+        assert depth.ndim == 2, f"Depth map should be 2D, but got {depth.ndim}D"
+        mask = depth > scale / max_depth
+        pcd = np.concatenate([self.__unproj[mask], scale / depth[mask][..., None]], axis=-1)
+        pcd[:, :2] *= pcd[:, -1:]
+        # Open3d
+        if isinstance(color, np.ndarray):
+            ret = o3d.geometry.PointCloud()
+            ret.points = o3d.utility.Vector3dVector(pcd)
+            ret.colors = o3d.utility.Vector3dVector(color[mask] / 255)
+            pcd = ret
+        return pcd
 
 
 class VideoCap(cv2.VideoCapture):
@@ -41,3 +70,7 @@ class VideoCap(cv2.VideoCapture):
 
     def __len__(self):
         return round(self.get(cv2.CAP_PROP_FRAME_COUNT))
+
+
+if __name__ == '__main__':
+    cam = Pinhole(80, 80, 100, 100, 40, 40)
