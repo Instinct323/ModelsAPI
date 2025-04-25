@@ -1,35 +1,31 @@
 import time
 
-import cv2
-import matplotlib
 import numpy as np
 import torch
 
 DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
 
-def rendered_depth(depth, cmap="Spectral_r"):
-    cmap = matplotlib.colormaps.get_cmap(cmap)
-    depth = (depth - depth.min()) / (depth.max() - depth.min()) * 255.0
-    depth = depth.astype(np.uint8)
-    return (cmap(depth)[:, :, :3] * 255)[:, :, ::-1].astype(np.uint8)
-
-
 def rectify_depth(pred: np.ndarray,
                   depth: np.ndarray = None,
-                  max_depth: float = 5.0):
+                  max_depth: float = 5.0,
+                  show_res: bool = False):
     if not isinstance(depth, np.ndarray): return pred
     assert depth.ndim == 2, f"Depth map should be 2D, but got {depth.ndim}D"
-    mask = depth > 1 / max_depth
-    x, y = pred[mask], depth[mask]
+    mask = (depth > 0) * (depth < max_depth)
+    x, y = pred[mask], 1 / depth[mask]
     # Linear least squares: Factorization
     xm, ym = x.mean(), y.mean()
     x_, y_ = x - xm, y - ym
     s = (x_ * y_).mean() / np.square(x_).mean()
     b = ym - s * xm
-    pred = s * pred + b
+    pred = 1 / (s * pred + b)
     # for debug
-    print(f"s={s}, b={b}, max={pred.max()}, RMSE={np.sqrt(np.square(pred[mask] - y).mean())}", )
+    if show_res:
+        print(f"s={s}, b={b}, max={pred.max()}, RMSE={np.sqrt(np.square(1 / pred[mask] - y).mean())}")
+        to_show = np.concatenate(list(map(colormap, [pred, np.abs(pred - depth)])), axis=1)
+        cv2.imshow("Pred & Res", to_show)
+        cv2.waitKey(0)
     return pred
 
 
@@ -53,60 +49,56 @@ class DepthAnythingV2:
         self.input_size = input_size
 
     def __call__(self,
-                 bgr: np.ndarray,
-                 depth: np.ndarray = None,
-                 max_depth: float = 5.0):
+                 bgr: np.ndarray):
         # Affine-invariant inverse depth
-        pred = self.model.infer_image(bgr, self.input_size)
-        return rectify_depth(pred, depth, max_depth=max_depth)
+        return self.model.infer_image(bgr, self.input_size)
 
 
 if __name__ == '__main__':
-    from utils.zjcv import Pinhole, RS_D435I
-    from utils.realsense import rgbd_flow
+    from utils.zjcv import *
     import open3d as o3d
 
-    model = DepthAnythingV2("vitb")
+    model = DepthAnythingV2("vits")
     camera = Pinhole(**RS_D435I)
 
-    if 0:
+    if 1:
         # Infer a single image
         color = cv2.imread("assets/color.png")
         depth = cv2.imread("assets/depth.png", cv2.IMREAD_UNCHANGED).astype(np.float32)
-        depth[depth > 0] = 5000 / depth[depth > 0]
-        cv2.imshow("Depth", rendered_depth(depth))
-        pred = model(color, depth)
-        cv2.imshow("Pred", rendered_depth(pred))
-        cv2.waitKey(0)
+        depth[depth > 0] = depth[depth > 0] / 5000
 
         # Depth to Point Cloud
-        h, w = depth.shape[:2]
-        pcd = camera.unproj(pred, color)
-        o3d.visualization.draw_geometries([pcd])
+        t0 = time.time()
+        pred = rectify_depth(model(color), depth, show_res=False)
+        pcd = to_colorful_pcd(*camera.unproj(pred), color)
+        pcd.transform(O3D_TRANSFORM)
+        print("FPS:", 1 / (time.time() - t0))
+
+        transform = np.eye(4)
+        transform[0, 3] = 3
+        org = to_colorful_pcd(*camera.unproj(depth), color)
+        org.transform(O3D_TRANSFORM).transform(transform)
+        o3d.visualization.draw_geometries([pcd, org])
 
     # Infer a video stream
+    from utils.realsense import rgbd_flow
+
     vis = o3d.visualization.Visualizer()
     vis.create_window()
-    view_control = vis.get_view_control()
-    view_control.set_lookat([0, 0, -1])
 
     pcd = o3d.geometry.PointCloud()
-    transform = np.eye(4)
-    transform[1, 1] = transform[2, 2] = -1
-
     for color, depth in rgbd_flow(*camera.size):
-        depth = depth.astype(np.float64)
-        depth[depth > 0] = 1000 / depth[depth > 0]
+        depth = depth.astype(np.float64) / 1000
 
         t0 = time.time()
-        pred = model(color, depth, max_depth=3)
+        pred = rectify_depth(model(color), depth)
         fps = 1 / (time.time() - t0)
         print(f"FPS: {fps:.2f}")
 
-        pcd = camera.unproj(pred, color, pcd=pcd, max_depth=3)
-        pcd.transform(transform)
+        pcd = to_colorful_pcd(*camera.unproj(pred), color)
+        pcd.transform(O3D_TRANSFORM)
+
         vis.add_geometry(pcd)
         vis.poll_events()
         vis.update_renderer()
-        # cv2.imshow("Depth", rendered_depth(pred)), cv2.waitKey(1)
     vis.destroy_window()

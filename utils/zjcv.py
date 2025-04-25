@@ -4,8 +4,30 @@ from typing import Union
 import cv2
 import numpy as np
 import open3d as o3d
+import matplotlib
 
 RS_D435I = dict(w=640, h=480, fx=384.98394775390625, fy=384.98394775390625, cx=320.5026550292969, cy=240.8127899169922)
+O3D_TRANSFORM = np.eye(4)
+O3D_TRANSFORM[1, 1] = O3D_TRANSFORM[2, 2] = -1
+
+
+def colormap(scale, cmap="Spectral_r", normalize=True):
+    cmap = matplotlib.colormaps.get_cmap(cmap)
+    if normalize: scale = (scale - scale.min()) / (scale.max() - scale.min())
+    return (cmap(scale)[:, :, :3] * 255)[:, :, ::-1].astype(np.uint8)
+
+
+def to_colorful_pcd(points: np.ndarray,
+                    mask: np.ndarray,
+                    color: np.ndarray,
+                    nb_points: int = 8,
+                    radius: float = 0.02):
+    """ Convert depth map to point cloud"""
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(points)
+    pcd.colors = o3d.utility.Vector3dVector(color[mask][:, ::-1] / 255)
+    pcd, ind = pcd.remove_radius_outlier(nb_points=nb_points, radius=radius)
+    return pcd
 
 
 class Pinhole:
@@ -19,21 +41,12 @@ class Pinhole:
 
     def unproj(self,
                depth: np.ndarray,
-               color: np.ndarray = None,
-               pcd: o3d.geometry.PointCloud = None,
-               scale: float = 1.,
                max_depth: float = 5):
         assert depth.ndim == 2, f"Depth map should be 2D, but got {depth.ndim}D"
-        mask = depth > scale / max_depth
-        points = np.concatenate([self.__unproj[mask], scale / depth[mask][..., None]], axis=-1)
+        mask = (depth > 0) * (depth < max_depth)
+        points = np.concatenate([self.__unproj[mask], depth[mask][..., None]], axis=-1)
         points[:, :2] *= points[:, -1:]
-        # Open3d
-        if isinstance(color, np.ndarray):
-            pcd = pcd or o3d.geometry.PointCloud()
-            pcd.points = o3d.utility.Vector3dVector(points)
-            pcd.colors = o3d.utility.Vector3dVector(color[mask][:, ::-1] / 255)
-            points = pcd
-        return points
+        return points, mask
 
 
 class VideoCap(cv2.VideoCapture):
