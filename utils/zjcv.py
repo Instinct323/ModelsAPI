@@ -21,12 +21,15 @@ def to_colorful_pcd(points: np.ndarray,
                     mask: np.ndarray,
                     color: np.ndarray,
                     nb_points: int = 8,
-                    radius: float = 0.02):
+                    radius: float = 0.02,
+                    pcd: o3d.geometry.PointCloud = None):
     """ Convert depth map to point cloud"""
-    pcd = o3d.geometry.PointCloud()
+    pcd = pcd or o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(points)
     pcd.colors = o3d.utility.Vector3dVector(color[mask][:, ::-1] / 255)
-    pcd, ind = pcd.remove_radius_outlier(nb_points=nb_points, radius=radius)
+    pcd_, ind = pcd.remove_radius_outlier(nb_points=nb_points, radius=radius)
+    pcd.points = pcd_.points
+    pcd.colors = pcd_.colors
     return pcd
 
 

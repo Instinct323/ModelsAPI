@@ -57,7 +57,7 @@ if __name__ == '__main__':
     from utils.zjcv import *
     import open3d as o3d
 
-    model = DepthAnythingV2("vits")
+    model = DepthAnythingV2("vitb")
     camera = Pinhole(**RS_D435I)
 
     if 1:
@@ -68,7 +68,7 @@ if __name__ == '__main__':
 
         # Depth to Point Cloud
         t0 = time.time()
-        pred = rectify_depth(model(color), depth, show_res=False)
+        pred = rectify_depth(model(color), depth)
         pcd = to_colorful_pcd(*camera.unproj(pred), color)
         pcd.transform(O3D_TRANSFORM)
         print("FPS:", 1 / (time.time() - t0))
@@ -94,7 +94,7 @@ if __name__ == '__main__':
         fps = 1 / (time.time() - t0)
         print(f"FPS: {fps:.2f}")
 
-        pcd = to_colorful_pcd(*camera.unproj(pred), color)
+        pcd = to_colorful_pcd(*camera.unproj(pred), color, pcd=pcd)
         pcd.transform(O3D_TRANSFORM)
 
         vis.add_geometry(pcd)
