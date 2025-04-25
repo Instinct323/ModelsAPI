@@ -7,10 +7,9 @@ DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is
 
 
 def rectify_depth(pred: np.ndarray,
-                  depth: np.ndarray = None,
+                  depth: np.ndarray,
                   max_depth: float = 5.0,
-                  show_res: bool = False):
-    if not isinstance(depth, np.ndarray): return pred
+                  show_res: int = None):
     assert depth.ndim == 2, f"Depth map should be 2D, but got {depth.ndim}D"
     mask = (depth > 0) * (depth < max_depth)
     x, y = pred[mask], 1 / depth[mask]
@@ -21,11 +20,11 @@ def rectify_depth(pred: np.ndarray,
     b = ym - s * xm
     pred = 1 / (s * pred + b)
     # for debug
-    if show_res:
+    if show_res is not None:
         print(f"s={s}, b={b}, max={pred.max()}, RMSE={np.sqrt(np.square(1 / pred[mask] - y).mean())}")
         to_show = np.concatenate(list(map(colormap, [pred, np.abs(pred - depth)])), axis=1)
         cv2.imshow("Pred & Res", to_show)
-        cv2.waitKey(0)
+        cv2.waitKey(show_res)
     return pred
 
 
