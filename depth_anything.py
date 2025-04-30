@@ -97,7 +97,7 @@ if __name__ == '__main__':
         pcd = to_colorful_pcd(*camera.unproj(pred), color)
         pcd.transform(O3D_TRANSFORM)
 
-        vis.add_geometry(pcd)
+        vis.add_geometry(pcd, reset_bounding_box=False)
         vis.poll_events()
         vis.update_renderer()
     vis.destroy_window()
