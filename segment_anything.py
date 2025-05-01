@@ -61,7 +61,8 @@ def show_masks(image, masks, scores,
 
 
 class SegmentAnythingV2(SAM2ImagePredictor):
-    """ :param encoder: Encoder type (tiny, small, base_plus, large)"""
+    """ https://github.com/facebookresearch/sam2
+        :param encoder: Encoder type (tiny, small, base_plus, large)"""
 
     def __init__(self, encoder):
         from sam2.build_sam import build_sam2
@@ -80,13 +81,13 @@ class SegmentAnythingV2(SAM2ImagePredictor):
 
 
 if __name__ == '__main__':
-    predictor = SegmentAnythingV2("tiny")
+    predictor = SegmentAnythingV2("large")
     image = cv2.imread("assets/color.png")
-    grid = make_grid(*image.shape[1::-1], s=80).reshape(-1, 2)
+    point = np.array([310, 160])
 
     # TODO: batch inference
     with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
         predictor.set_image(image)
         predictor.predict_and_show(image,
-                                   point_coords=grid,
-                                   point_labels=np.ones(grid.shape[0], dtype=np.bool_))
+                                   point_coords=point[None],
+                                   point_labels=np.ones(1, dtype=np.bool_))
