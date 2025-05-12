@@ -70,14 +70,14 @@ if __name__ == '__main__':
         t0 = time.time()
         pred = rectify_depth(model(color), depth)
         pcd = to_colorful_pcd(*camera.unproj(pred), color)
-        pcd.transform(O3D_TRANSFORM)
+        # pcd.transform(O3D_TRANSFORM)
         print("FPS:", 1 / (time.time() - t0))
 
         transform = np.eye(4)
         transform[0, 3] = 3
         org = to_colorful_pcd(*camera.unproj(depth), color)
-        org.transform(O3D_TRANSFORM).transform(transform)
-        o3d.visualization.draw_geometries([pcd, org])
+        org.transform(transform)
+        o3d.visualization.draw_geometries([pcd, org, o3d.geometry.TriangleMesh.create_coordinate_frame(size=1)])
 
     # Infer a video stream
     from utils.realsense import rgbd_flow
