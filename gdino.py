@@ -20,7 +20,7 @@ transform = T.Compose([
 class GDINO:
 
     def __init__(self,
-                 box_thresh=0.3,
+                 box_thresh=0.35,
                  text_thresh=0.25):
         # pip install git+https://github.com/IDEA-Research/GroundingDINO.git
         from groundingdino.config import GroundingDINO_SwinT_OGC as config
