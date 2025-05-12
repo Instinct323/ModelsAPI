@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
+from sam2.build_sam import build_sam2
 from sam2.sam2_image_predictor import SAM2ImagePredictor
 
 
@@ -65,8 +66,6 @@ class SegmentAnythingV2(SAM2ImagePredictor):
         :param encoder: Encoder type (tiny, small, base_plus, large)"""
 
     def __init__(self, encoder):
-        from sam2.build_sam import build_sam2
-
         encoder_type = {"tiny": "t", "small": "s", "base_plus": "b+", "large": "l"}
         assert encoder in encoder_type
 

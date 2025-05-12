@@ -1,5 +1,4 @@
 import time
-from functools import partial
 from typing import Union, Tuple, List
 
 import requests
@@ -23,7 +22,7 @@ class QwenVL:
         version = list(map(int, transformers.__version__.split(".")))
         assert version[0] == 4 and version[1] <= 50, "[2025-05-12] transformers version must be 4.50.x or lower"
         # Check connection
-        assert requests.get("https://huggingface.co", timeout=10).status_code == 200
+        assert requests.get("https://huggingface.co", timeout=5).status_code == 200
 
         t0 = time.time()
         patches_range = patches_range or (None,) * 2
@@ -39,8 +38,6 @@ class QwenVL:
             pretrained_model_name_or_path, torch_dtype=torch_dtype, device_map=device_map
         )
         LOGGER.info(f"Model loaded in {time.time() - t0:.2f}s.")
-        # Freeze model parameters
-        for k, v in self.model.named_parameters(): v.requires_grad = False
 
     def get_input_tensor(self,
                          messages,
@@ -60,12 +57,8 @@ class QwenVL:
     def generate(self,
                  inputs,
                  max_new_tokens: int,
-                 requires_grad: bool = False,
                  simplify: bool = True):
-        generate = self.model.generate
-        if requires_grad: generate = partial(generate.__wrapped__, self.model)
-
-        generated_ids = generate(**inputs, max_new_tokens=max_new_tokens)
+        generated_ids = self.model.generate(**inputs, max_new_tokens=max_new_tokens)
         ids = [outi[len(ini):] for ini, outi in zip(inputs.input_ids, generated_ids)]
         return self.processor.batch_decode(ids, skip_special_tokens=simplify, clean_up_tokenization_spaces=False)
 

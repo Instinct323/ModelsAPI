@@ -3,12 +3,13 @@ import warnings
 warnings.filterwarnings("ignore")
 
 import cv2
+import requests
 
 import groundingdino.datasets.transforms as T
 import numpy as np
 from PIL import Image
 
-from groundingdino.util.inference import load_model, predict, annotate
+from groundingdino.util import inference
 
 transform = T.Compose([
     T.RandomResize([800], max_size=1333),
@@ -17,15 +18,17 @@ transform = T.Compose([
 ])
 
 
-class GDINO:
+class GroundingDINO:
 
     def __init__(self,
                  box_thresh=0.35,
                  text_thresh=0.25):
+        # Check connection
+        assert requests.get("https://huggingface.co", timeout=5).status_code == 200
         # pip install git+https://github.com/IDEA-Research/GroundingDINO.git
         from groundingdino.config import GroundingDINO_SwinT_OGC as config
         checkpoint = "checkpoints/groundingdino_swint_ogc.pth"
-        self.model = load_model(config.__file__, checkpoint)
+        self.model = inference.load_model(config.__file__, checkpoint)
         self.box_thresh = box_thresh
         self.text_thresh = text_thresh
 
@@ -33,7 +36,7 @@ class GDINO:
                  image: Image,
                  prompt: str):
         """ :return: boxes, logits, phrases """
-        return predict(
+        return inference.predict(
             model=self.model,
             image=transform(image.convert("RGB"), None)[0],
             caption=prompt,
@@ -43,7 +46,7 @@ class GDINO:
 
 
 if __name__ == "__main__":
-    gdino = GDINO()
+    gdino = GroundingDINO()
 
     # Inference
     image = Image.open("assets/color.png")
@@ -51,5 +54,5 @@ if __name__ == "__main__":
     print(ret)
 
     # Visualize
-    annotated_frame = annotate(image_source=np.asarray(image), boxes=boxes, logits=logits, phrases=phrases)
+    annotated_frame = inference.annotate(image_source=np.asarray(image), boxes=boxes, logits=logits, phrases=phrases)
     cv2.imwrite("runs/test.jpg", annotated_frame)
