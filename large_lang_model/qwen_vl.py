@@ -1,6 +1,8 @@
+import time
 from functools import partial
 from typing import Union, Tuple, List
 
+import requests
 import torch
 from qwen_vl_utils import process_vision_info
 from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor, Qwen2_5_VLProcessor, Qwen2VLImageProcessorFast
@@ -17,17 +19,27 @@ class QwenVL:
                  patches_range: Tuple[int, int] = (16, 512),
                  torch_dtype: torch.dtype = "auto",
                  device_map: Union[str, torch.device] = "auto"):
+        import transformers
+        version = list(map(int, transformers.__version__.split(".")))
+        assert version[0] == 4 and version[1] <= 50, "[2025-05-12] transformers version must be 4.50.x or lower"
+        # Check connection
+        assert requests.get("https://huggingface.co", timeout=10).status_code == 200
+
+        t0 = time.time()
         patches_range = patches_range or (None,) * 2
         self.processor: Qwen2_5_VLProcessor = AutoProcessor.from_pretrained(
             pretrained_model_name_or_path, use_fast=True,
             min_pixels=patches_range[0] * self.patch_size ** 2,
             max_pixels=patches_range[1] * self.patch_size ** 2
         )
+        LOGGER.info(f"Processor loaded in {time.time() - t0:.2f}s.")
 
+        t0 = time.time()
         self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
             pretrained_model_name_or_path, torch_dtype=torch_dtype, device_map=device_map
         )
-        # 冻结模型参数
+        LOGGER.info(f"Model loaded in {time.time() - t0:.2f}s.")
+        # Freeze model parameters
         for k, v in self.model.named_parameters(): v.requires_grad = False
 
     def get_input_tensor(self,
@@ -57,15 +69,33 @@ class QwenVL:
         ids = [outi[len(ini):] for ini, outi in zip(inputs.input_ids, generated_ids)]
         return self.processor.batch_decode(ids, skip_special_tokens=simplify, clean_up_tokenization_spaces=False)
 
+    def query_once(self,
+                   max_new_tokens: int,
+                   **contents):
+        return model.generate(model.get_input_tensor([
+            make_content("user", **contents)
+        ]), max_new_tokens=max_new_tokens)[0]
+
     def chat(self,
-             messages: list,
              max_new_tokens: int):
-        messages = messages.copy()
-        messages.append(
-            make_content("assistant", self.generate(self.get_input_tensor(messages), max_new_tokens))[0]
-        )
-        return messages
+        """ Chat with the model. Type 'exit' to quit."""
+        messages = []
+        while True:
+            msg = input("User: ")
+            if msg == "exit": break
+            messages.append(make_content("user", text=msg))
+            messages.append(make_content("assistant", text=self.generate(self.get_input_tensor(messages), max_new_tokens)[0]))
+
+            text = messages[-1]["content"]
+            text = text[0] if isinstance(text, list) else text
+            text = text["text"] if isinstance(text, dict) else text
+            yield text
 
 
 if __name__ == '__main__':
-    model = QwenVL("Qwen/Qwen2.5-VL-7B-Instruct", torch_dtype=torch.bfloat16)
+    model = QwenVL("Qwen/Qwen2.5-VL-3B-Instruct")
+
+    print(model.query_once(512, text="描述这张图片",
+                           image="https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg"))
+
+    for ctx in model.chat(512): print(ctx)
