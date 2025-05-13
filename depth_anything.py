@@ -10,6 +10,11 @@ def rectify_depth(pred: np.ndarray,
                   depth: np.ndarray,
                   max_depth: float = 5.0,
                   show_res: int = None):
+    """ Rectify the predicted depth map using the ground truth depth map.
+        :param pred: Predicted inverse depth map.
+        :param depth: Ground truth depth map.
+        :param max_depth: Maximum depth value to consider for rectification.
+        :param show_res: Show the rectified result for debugging. """
     assert depth.ndim == 2, f"Depth map should be 2D, but got {depth.ndim}D"
     mask = (depth > 0) * (depth < max_depth)
     x, y = pred[mask], 1 / depth[mask]
@@ -49,7 +54,9 @@ class DepthAnythingV2:
 
     def __call__(self,
                  bgr: np.ndarray):
-        # Affine-invariant inverse depth
+        """ Infer depth from a BGR image.
+            :param bgr: BGR image with shape (H, W, 3) and dtype uint8
+            :return: Affine-invariant inverse depth map with shape (H, W) and dtype float32 """
         return self.model.infer_image(bgr, self.input_size)
 
 

@@ -35,7 +35,10 @@ class GroundingDINO:
     def __call__(self,
                  image: Image,
                  prompt: str):
-        """ :return: boxes, logits, phrases """
+        """ Open-vocabulary object detection
+            :param image: PIL image
+            :param prompt: text prompt (e.g. "computer. jar. cup")
+            :return: boxes, logits, phrases """
         return inference.predict(
             model=self.model,
             image=transform(image.convert("RGB"), None)[0],

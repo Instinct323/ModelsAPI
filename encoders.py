@@ -28,12 +28,18 @@ class OpenCLIP:
         self.tokenizer = open_clip.get_tokenizer(model_name)
 
     def encode_images(self, *images):
+        """ Encode images
+            :param images: a list of PIL images
+            :return: feature vectors with shape [B, C] """
         # [B, C, H, W] -> [B, C]
         x = torch.stack(list(map(self.preprocess, images))).to(DEVICE)
         x = self.model.encode_image(x)
         return x / x.norm(dim=-1, keepdim=True)
 
     def encode_texts(self, *texts):
+        """ Encode texts
+            :param texts: a list of texts
+            :return: feature vectors with shape [B, C] """
         # [B, L] -> [B, C]
         x = self.tokenizer(texts).to(DEVICE)
         x = self.model.encode_text(x)
