@@ -58,6 +58,10 @@ class QwenVL:
                  inputs,
                  max_new_tokens: int,
                  simplify: bool = True):
+        """ Generate text from the model.
+            :param inputs: The input tensor from get_input_tensor.
+            :param max_new_tokens: The maximum number of new tokens to generate.
+            :return: The generated text. """
         generated_ids = self.model.generate(**inputs, max_new_tokens=max_new_tokens)
         ids = [outi[len(ini):] for ini, outi in zip(inputs.input_ids, generated_ids)]
         return self.processor.batch_decode(ids, skip_special_tokens=simplify, clean_up_tokenization_spaces=False)
@@ -65,6 +69,9 @@ class QwenVL:
     def query_once(self,
                    max_new_tokens: int,
                    **contents):
+        """ Query the model once.
+            :param max_new_tokens: The maximum number of new tokens to generate.
+            :param contents: The input contents (e.g., text, image, video)."""
         return model.generate(model.get_input_tensor([
             make_content("user", **contents)
         ]), max_new_tokens=max_new_tokens)[0]

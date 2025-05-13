@@ -4,11 +4,12 @@ from pathlib import Path
 import PIL.Image
 
 logging.basicConfig(format="[%(levelname)s] %(message)s", level=logging.INFO)
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger("utils")
 
 
 def make_content(role, **contents) -> dict:
-    """ :param role: user, assistant, system"""
+    """ :param role: user, assistant, system
+        :param contents: The input contents (e.g., text, image, video)."""
     ret = []
     for t, v in contents.items():
         if t in ("image", "video"):
