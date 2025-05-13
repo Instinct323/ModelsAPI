@@ -40,7 +40,7 @@ pip install accelerate huggingface_hub[hf_xet] qwen-vl-utils[decord] transformer
 - Segment Anything Model 2
 
 ```bash
-pip install
+# TODO
 ```
 
 - Web
