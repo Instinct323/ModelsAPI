@@ -72,7 +72,7 @@ class QwenVL:
         """ Query the model once.
             :param max_new_tokens: The maximum number of new tokens to generate.
             :param contents: The input contents (e.g., text, image, video)."""
-        return model.generate(model.get_input_tensor([
+        return self.generate(self.get_input_tensor([
             make_content("user", **contents)
         ]), max_new_tokens=max_new_tokens)[0]
 
@@ -93,7 +93,7 @@ class QwenVL:
 
 
 if __name__ == '__main__':
-    model = QwenVL("Qwen/Qwen2.5-VL-7B-Instruct", torch_dtype=torch.bfloat16)
+    model = QwenVL("Qwen/Qwen2.5-VL-3B-Instruct", torch_dtype=torch.bfloat16)
 
     print(model.query_once(512, text="描述这张图片",
                            image="https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg"))

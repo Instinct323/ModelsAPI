@@ -72,8 +72,10 @@ class SegmentAnythingV2(SAM2ImagePredictor):
         checkpoint = f"checkpoints/sam2.1_hiera_{encoder}.pt"
         model_cfg = f"configs/sam2.1/sam2.1_hiera_{encoder_type[encoder]}.yaml"
         super().__init__(build_sam2(model_cfg, checkpoint))
+        # self.video_predictor = build_sam2_video_predictor(model_cfg, checkpoint)
 
     def predict_and_show(self, image, **kwargs):
+        """ See SAM2ImagePredictor.predict for kwargs details."""
         ret = masks, scores, logits = self.predict(**kwargs)
         show_masks(image, masks, scores, **kwargs)
         return ret

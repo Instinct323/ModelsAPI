@@ -1,6 +1,0 @@
-# torch==2.4.1+cu121: https://pytorch.org/get-started/locally/
-
-accelerate
-huggingface_hub[hf_xet]
-qwen-vl-utils[decord]
-transformers==4.50.3

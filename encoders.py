@@ -22,7 +22,6 @@ class OpenCLIP:
                  model_name: str = "ViT-B-32",
                  pretrained: str = "laion2b_s34b_b79k"):
         import open_clip
-
         self.model, _, self.preprocess = open_clip.create_model_and_transforms(model_name, pretrained=pretrained)
         self.model.eval().to(DEVICE)
         self.tokenizer = open_clip.get_tokenizer(model_name)
@@ -51,6 +50,8 @@ if __name__ == '__main__':
 
     clip = OpenCLIP()
     img = PIL.Image.open("assets/cat.jpg")
-    img = clip.encode_images(img)
-    text = clip.encode_texts("a cat", "a dog")
+
+    with torch.no_grad():
+        img = clip.encode_images(img)
+        text = clip.encode_texts("a cat", "a dog")
     print(img @ text.T)
