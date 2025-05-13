@@ -25,7 +25,6 @@ class GroundingDINO:
                  text_thresh=0.25):
         # Check connection
         assert requests.get("https://huggingface.co", timeout=5).status_code == 200
-        # pip install git+https://github.com/IDEA-Research/GroundingDINO.git
         from groundingdino.config import GroundingDINO_SwinT_OGC as config
         checkpoint = "checkpoints/groundingdino_swint_ogc.pth"
         self.model = inference.load_model(config.__file__, checkpoint)
