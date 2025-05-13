@@ -1,36 +1,38 @@
-import base64
+import concurrent.futures
 import logging
 import pickle
 import time
 
-import numpy as np
 import requests
 
 logging.basicConfig(format="[%(levelname)s] %(message)s", level=logging.INFO)
-LOGGER = logging.getLogger(__name__)
-
-# Serialize and deserialize functions
-serialize = lambda obj: base64.b64encode(pickle.dumps(obj)).decode("utf-8")
-deserialize = lambda string: pickle.loads(base64.b64decode(string))
+LOGGER = logging.getLogger("utils")
 
 
-class WebServer:
+class FunctionsAPI:
 
     def __init__(self, url):
         self.url = url
+        self.executor = concurrent.futures.ThreadPoolExecutor()
 
     def invoke(self, func, *args, **kwargs):
         t0 = time.time()
-        response = requests.post(f"{self.url}/invoke", json={
-            "func": func,
-            "args": serialize(args),
-            "kwargs": serialize(kwargs),
-        })
+        data = {"func": func, "args": args, "kwargs": kwargs}
+        response = requests.post(f"{self.url}/invoke", data=pickle.dumps(data))
         assert response.status_code == 200, f"{response.status_code}, {response.text}"
         LOGGER.info(f"{func}: {time.time() - t0:.3f}s")
-        return deserialize(response.content)
+        return pickle.loads(response.content)
+
+    def invoke_async(self, func, *args, **kwargs):
+        return self.executor.submit(self.invoke, func, *args, **kwargs)
 
 
 if __name__ == '__main__':
-    remote = WebServer("http://127.0.0.1:8000")
-    print(remote.invoke("add", np.array([1, 5565]), np.array([1, 2])))
+    import numpy as np
+
+    remote = FunctionsAPI("http://127.0.0.1:8000")
+
+    fu1 = remote.invoke_async("add", np.array([1, 5565]), np.array([1, 2]))
+    fu2 = remote.invoke_async("sleep", 5)
+    fu3 = remote.invoke_async("sleep", 5)
+    print(fu1.result(), fu2.result(), fu3.result())
