@@ -35,4 +35,5 @@ if __name__ == '__main__':
     fu1 = remote.invoke_async("add", np.array([1, 5565]), np.array([1, 2]))
     fu2 = remote.invoke_async("sleep", 5)
     fu3 = remote.invoke_async("sleep", 5)
+
     print(fu1.result(), fu2.result(), fu3.result())
