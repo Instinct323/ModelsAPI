@@ -20,8 +20,8 @@ runs
 install
 
 # Neural Network weights
-checkpoints
 *.pt
+!checkpoints/contact_graspnet/checkpoints/model.pt
 *.pth
 *.onnx
 *.pkf
