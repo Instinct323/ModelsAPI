@@ -23,7 +23,7 @@ pip install open_clip_torch
 - [Contact-GraspNet](https://github.com/elchun/contact_graspnet_pytorch)
 
 ```bash
-pip install provider pyrender git+https://github.com/elchun/contact_graspnet_pytorch.git
+pip install provider pyrender
 ```
 
 - [Depth Anything V2](https://github.com/DepthAnything/Depth-Anything-V2)
