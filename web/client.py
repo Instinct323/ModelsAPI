@@ -28,12 +28,13 @@ class FunctionsAPI:
 
 
 if __name__ == '__main__':
+    import cv2
     import numpy as np
 
     remote = FunctionsAPI("http://127.0.0.1:8000")
 
-    fu1 = remote.invoke_async("add", np.array([1, 5565]), np.array([1, 2]))
+    fu1 = remote.invoke_async("add", cv2.imread("../assets/color.png"), np.array([1, 3, 2]))
     fu2 = remote.invoke_async("sleep", 5)
     fu3 = remote.invoke_async("sleep", 5)
 
-    print(fu1.result(), fu2.result(), fu3.result())
+    print(fu1.result().shape, fu2.result(), fu3.result())
