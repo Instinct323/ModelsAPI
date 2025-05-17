@@ -4,11 +4,11 @@ import os
 
 import numpy as np
 
-from . import config_utils
-from .checkpoints import CheckpointIO
-from .contact_grasp_estimator import GraspEstimator
-from .data import load_available_input_data
-from .visualization_utils_o3d import visualize_grasps, show_image
+import config_utils
+from checkpoints import CheckpointIO
+from contact_grasp_estimator import GraspEstimator
+from data import load_available_input_data
+from visualization_utils_o3d import visualize_grasps, show_image
 
 
 def inference(global_config,
