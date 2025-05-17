@@ -33,7 +33,7 @@ class SegmentAnythingV2:
     def annotate(self,
                  image: np.ndarray,
                  masks: np.ndarray) -> np.ndarray:
-        return self.anno_mask.annotate(image, detections=sv.Detections(xyxy=np.zeros([len(masks), 4]), mask=masks))
+        return self.anno_mask.annotate(image.copy(), detections=sv.Detections(xyxy=np.zeros([len(masks), 4]), mask=masks))
 
 
 if __name__ == '__main__':

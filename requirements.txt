@@ -7,4 +7,5 @@ open3d
 pyyaml
 scikit-learn
 seaborn
+timm
 tqdm

@@ -11,18 +11,19 @@ class GroundedSAM:
 
     def __init__(self,
                  gdino_kwargs: dict = None,
-                 sam2_kwargs: dict = None):
-        self.gdino = GroundingDINO(**(gdino_kwargs or {}))
+                 sam2_kwargs: dict = None,
+                 tag2text_kwargs: dict = None):
+        self.gdino = GroundingDINO(**(gdino_kwargs or {}), tag2text_kwargs=tag2text_kwargs)
         self.gdino.anno_box.color_lookup = self.gdino.anno_label.color_lookup = sv.ColorLookup.INDEX
         self.sam2 = SegmentAnythingV2(**(sam2_kwargs or {}))
 
     def __call__(self,
                  image: np.ndarray,
-                 classes: list[str]) -> sv.Detections:
+                 caption: str = None) -> sv.Detections:
         """ :param image: PIL image
-            :param classes: list of classes to detect """
+            :param caption: text prompt """
         # TODO: prompt 为 None, 使用 RAM 生成
-        dets = self.gdino(image, classes)
+        dets = self.gdino(image, caption)
         masks = self.sam2(image, box=dets.xyxy)
         dets.mask = masks["mask"]
         # Reorder by scores
@@ -39,10 +40,10 @@ class GroundedSAM:
 
 
 if __name__ == '__main__':
-    gsam = GroundedSAM(sam2_kwargs=dict(encoder="large"))
+    gsam = GroundedSAM(sam2_kwargs=dict(encoder="large"), tag2text_kwargs={})
     image = cv2.imread("assets/color.png")
 
     with torch.inference_mode():
-        dets = gsam(image, ["computer", "jar", "cup"])
+        dets = gsam(image)
         print(dets)
         cv2.imwrite("runs/gsam.png", gsam.annotate(image, dets))

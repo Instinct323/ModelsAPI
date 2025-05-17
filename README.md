@@ -44,7 +44,15 @@ pip install git+https://github.com/IDEA-Research/GroundingDINO.git
 pip install accelerate huggingface_hub[hf_xet] qwen-vl-utils[decord] transformers==4.50.3
 ```
 
-- [Segment Anything Model 2](https://github.com/facebookresearch/sam2)
+- [Tag2Text](https://github.com/xinyu1205/recognize-anything)
+
+```bash
+pip install fairscale git+https://github.com/xinyu1205/recognize-anything.git
+wget https://huggingface.co/spaces/xinyu1205/recognize-anything/resolve/main/tag2text_swin_14m.pth?download=true
+mv tag2text_swin_14m.pth?download=true checkpoints/tag2text_swin_14m.pth
+```
+
+- [Segment Anything V2](https://github.com/facebookresearch/sam2)
 
 ```bash
 pip install hydra-core iopath
