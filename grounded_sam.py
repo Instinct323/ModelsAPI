@@ -40,10 +40,17 @@ class GroundedSAM:
 
 
 if __name__ == '__main__':
+    from utils.realsense import rgbd_flow
+
     gsam = GroundedSAM(sam2_kwargs=dict(encoder="large"), tag2text_kwargs={})
+
     image = cv2.imread("assets/color.png")
+    dets = gsam(image)
+    print(dets)
+    cv2.imwrite("runs/gsam.png", gsam.annotate(image, dets))
 
     with torch.inference_mode():
-        dets = gsam(image)
-        print(dets)
-        cv2.imwrite("runs/gsam.png", gsam.annotate(image, dets))
+        for c, d in rgbd_flow(640, 480):
+            dets = gsam(c)
+            cv2.imshow("frame", gsam.annotate(c, dets))
+            cv2.waitKey(1)

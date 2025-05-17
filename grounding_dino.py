@@ -20,6 +20,7 @@ def detection_labels(detections: sv.Detections):
 
 
 class GroundingDINO:
+    """ Reference: https://github.com/IDEA-Research/Grounded-Segment-Anything/blob/main/automatic_label_tag2text_demo.py"""
     anno_box = sv.BoxAnnotator()
     anno_label = sv.LabelAnnotator(smart_position=True)
 
