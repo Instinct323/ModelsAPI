@@ -4,6 +4,7 @@ matplotlib
 numpy<2
 opencv-python
 open3d
+pyrealsense2
 pyyaml
 scikit-learn
 seaborn

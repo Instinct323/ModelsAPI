@@ -28,6 +28,7 @@ class GroundingDINO:
                  box_thresh: float = 0.35,
                  text_thresh: float = 0.25,
                  nms_iou: float = 0.5,
+                 boxarea_thresh: float = 0.7,
                  tag2text_kwargs: dict = None):
         # Check connection
         assert requests.get("https://huggingface.co", timeout=5).status_code == 200
@@ -36,11 +37,15 @@ class GroundingDINO:
         self.box_thresh = box_thresh
         self.text_thresh = text_thresh
         self.nms_iou = nms_iou
+        self.boxarea_thresh = boxarea_thresh
         # Recognize Anything
         self.tag2text = None
         if tag2text_kwargs is not None:
-            from tag2text import Tag2Text
-            self.tag2text = Tag2Text(**tag2text_kwargs)
+            try:
+                from tag2text import Tag2Text
+                self.tag2text = Tag2Text(**tag2text_kwargs)
+            except ModuleNotFoundError:
+                print("Tag2Text not found.")
 
     def __call__(self,
                  image: np.ndarray,
@@ -60,6 +65,8 @@ class GroundingDINO:
         )
         dets.metadata = classes = np.array(sorted(set(phrases)))
         dets.class_id = np.searchsorted(classes, phrases)
+        if self.boxarea_thresh:
+            dets = dets[dets.box_area / np.prod(image.shape[:2]) < self.boxarea_thresh]
         if self.nms_iou: dets = dets.with_nms(self.nms_iou)
         return dets
 

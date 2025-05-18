@@ -1,4 +1,5 @@
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 import supervision as sv
 import torch
@@ -10,9 +11,11 @@ from segment_anything import SegmentAnythingV2
 class GroundedSAM:
 
     def __init__(self,
+                 score_thresh: float = 0.1,
                  gdino_kwargs: dict = None,
                  sam2_kwargs: dict = None,
                  tag2text_kwargs: dict = None):
+        self.score_thresh = score_thresh
         self.gdino = GroundingDINO(**(gdino_kwargs or {}), tag2text_kwargs=tag2text_kwargs)
         self.gdino.anno_box.color_lookup = self.gdino.anno_label.color_lookup = sv.ColorLookup.INDEX
         self.sam2 = SegmentAnythingV2(**(sam2_kwargs or {}))
@@ -24,19 +27,22 @@ class GroundedSAM:
             :param caption: text prompt """
         # TODO: prompt 为 None, 使用 RAM 生成
         dets = self.gdino(image, caption)
-        masks = self.sam2(image, box=dets.xyxy)
-        dets.mask = masks["mask"]
-        # Reorder by scores
-        dets.confidence *= masks["confidence"]
-        i = np.argsort(dets.confidence)[::-1]
-        for k in ("xyxy", "confidence", "class_id", "mask"):
-            setattr(dets, k, getattr(dets, k)[i])
+        if dets:
+            masks = self.sam2(image, box=dets.xyxy)
+            dets.mask = masks["mask"]
+            # Reorder by scores
+            dets.confidence *= masks["confidence"]
+            dets = dets[np.argsort(dets.confidence)[::-1]]
+        if self.score_thresh:
+            dets = dets[dets.confidence > self.score_thresh]
         return dets
 
     def annotate(self,
                  image: np.ndarray,
                  detections: sv.Detections) -> np.ndarray:
-        return self.sam2.annotate(self.gdino.annotate(image, detections=detections), masks=detections.mask)
+        ret = self.gdino.annotate(image, detections=detections)
+        if detections.mask is not None: ret = self.sam2.annotate(ret, masks=detections.mask)
+        return ret
 
 
 if __name__ == '__main__':
@@ -50,7 +56,8 @@ if __name__ == '__main__':
     cv2.imwrite("runs/gsam.png", gsam.annotate(image, dets))
 
     with torch.inference_mode():
-        for c, d in rgbd_flow(640, 480):
+        for c, d in rgbd_flow(640, 480, show=False):
             dets = gsam(c)
-            cv2.imshow("frame", gsam.annotate(c, dets))
-            cv2.waitKey(1)
+            print(dets.confidence)
+            plt.imshow(gsam.annotate(c, dets))
+            plt.pause(1e-3)
