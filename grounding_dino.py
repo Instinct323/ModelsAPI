@@ -6,17 +6,11 @@ import requests
 import supervision as sv
 from PIL import Image
 
+from utils.utils import detection_labels
+
 warnings.filterwarnings("ignore")
 
 from groundingdino.util import inference
-
-
-def detection_labels(detections: sv.Detections):
-    return [
-        f"{phrase} {score:.2f}"
-        for phrase, score
-        in zip(detections.metadata[detections.class_id], detections.confidence)
-    ]
 
 
 class GroundingDINO:
