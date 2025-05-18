@@ -4,7 +4,6 @@ import cv2
 import numpy as np
 import requests
 import supervision as sv
-from PIL import Image
 
 from utils.utils import detection_labels
 
@@ -22,8 +21,7 @@ class GroundingDINO:
                  box_thresh: float = 0.35,
                  text_thresh: float = 0.25,
                  nms_iou: float = 0.5,
-                 boxarea_thresh: float = 0.7,
-                 tag2text_kwargs: dict = None):
+                 boxarea_thresh: float = 0.7):
         # Check connection
         assert requests.get("https://huggingface.co", timeout=5).status_code == 200
         from groundingdino.config import GroundingDINO_SwinT_OGC as config
@@ -32,26 +30,13 @@ class GroundingDINO:
         self.text_thresh = text_thresh
         self.nms_iou = nms_iou
         self.boxarea_thresh = boxarea_thresh
-        # Recognize Anything
-        self.tag2text = None
-        if tag2text_kwargs is not None:
-            try:
-                from tag2text import Tag2Text
-                self.tag2text = Tag2Text(**tag2text_kwargs)
-            except ModuleNotFoundError:
-                print("Tag2Text not found.")
 
     def __call__(self,
                  image: np.ndarray,
-                 caption: str = None) -> sv.Detections:
+                 caption: str) -> sv.Detections:
         """ Open-vocabulary object detection
             :param image: PIL image
             :param caption: text prompt """
-        if not caption:
-            assert self.tag2text is not None, "Please provide caption or use tag2text_kwargs to enable Tag2Text."
-            caption = self.tag2text(Image.fromarray(image))[0].replace(" |", ".")
-            print("Tag2Text:", caption)
-
         dets, phrases = self.model.predict_with_caption(
             image, caption,
             box_threshold=self.box_thresh,
@@ -74,14 +59,10 @@ class GroundingDINO:
 
 
 if __name__ == "__main__":
-    gdino = GroundingDINO(tag2text_kwargs={})
+    gdino = GroundingDINO()
 
     image = cv2.imread("assets/color.png")
 
     dets = gdino(image, "computer. jar. cup")
     print(dets)
-    cv2.imwrite("runs/gdino_wo_tt.jpg", gdino.annotate(image, dets))
-
-    dets = gdino(image)
-    print(dets)
-    cv2.imwrite("runs/gdino_w_tt.jpg", gdino.annotate(image, dets))
+    cv2.imwrite("runs/gdino.jpg", gdino.annotate(image, dets))
