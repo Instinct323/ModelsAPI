@@ -2,7 +2,6 @@ import warnings
 
 import cv2
 import numpy as np
-import requests
 import supervision as sv
 
 from utils.utils import detection_labels
@@ -22,8 +21,7 @@ class GroundingDINO:
                  text_thresh: float = 0.25,
                  nms_iou: float = 0.5,
                  boxarea_thresh: float = 0.7):
-        # Check connection
-        assert requests.get("https://huggingface.co", timeout=5).status_code == 200
+        # Require to connect to Huggingface
         from groundingdino.config import GroundingDINO_SwinT_OGC as config
         self.model = inference.Model(config.__file__, "checkpoints/groundingdino_swint_ogc.pth")
         self.box_thresh = box_thresh

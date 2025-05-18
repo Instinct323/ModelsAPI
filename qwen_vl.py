@@ -1,7 +1,7 @@
 import time
+from pathlib import Path
 from typing import Union, Tuple, List
 
-import requests
 import torch
 from qwen_vl_utils import process_vision_info
 from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor, Qwen2_5_VLProcessor, Qwen2VLImageProcessorFast
@@ -9,25 +9,34 @@ from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor, Qwen
 from utils.utils import LOGGER, make_content
 
 
+def huggingface_model_path(repo_id: str):
+    """ Download the model from Hugging Face. """
+    path = Path(f"~/.cache/huggingface/hub/models--{repo_id.replace('/', '--')}/snapshots").expanduser()
+    if not path.exists():
+        LOGGER.warning(f"If the loading time is too long, run the following command to download the model: huggingface-cli download {repo_id}")
+        return repo_id
+    return next(path.iterdir())
+
+
 class QwenVL:
+    """ :param repo_id: huggingface-cli download <repo_id>"""
     patch_size = Qwen2VLImageProcessorFast.patch_size
     device = property(lambda self: self.model.device)
 
     def __init__(self,
-                 pretrained_model_name_or_path: str,
+                 repo_id: str,
                  patches_range: Tuple[int, int] = (16, 512),
                  torch_dtype: torch.dtype = "auto",
                  device_map: Union[str, torch.device] = "auto"):
         import transformers
         version = list(map(int, transformers.__version__.split(".")))
         assert version[0] == 4 and version[1] <= 50, "[2025-05-12] transformers version must be 4.50.x or lower"
-        # Check connection
-        assert requests.get("https://huggingface.co", timeout=5).status_code == 200
+        repo_id = huggingface_model_path(repo_id)
 
         t0 = time.time()
         patches_range = patches_range or (None,) * 2
         self.processor: Qwen2_5_VLProcessor = AutoProcessor.from_pretrained(
-            pretrained_model_name_or_path, use_fast=True,
+            repo_id, use_fast=True,
             min_pixels=patches_range[0] * self.patch_size ** 2,
             max_pixels=patches_range[1] * self.patch_size ** 2
         )
@@ -35,7 +44,7 @@ class QwenVL:
 
         t0 = time.time()
         self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-            pretrained_model_name_or_path, torch_dtype=torch_dtype, device_map=device_map
+            repo_id, torch_dtype=torch_dtype, device_map=device_map,
         )
         LOGGER.info(f"Model loaded in {time.time() - t0:.2f}s.")
 

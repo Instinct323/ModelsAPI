@@ -48,6 +48,8 @@ class OpenCLIP:
 if __name__ == '__main__':
     import PIL.Image
 
+    print(load_dinov2())
+
     clip = OpenCLIP()
     img = PIL.Image.open("assets/cat.jpg")
 

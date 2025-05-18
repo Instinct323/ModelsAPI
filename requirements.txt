@@ -7,6 +7,6 @@ open3d
 pyrealsense2
 pyyaml
 scikit-learn
+supervision
 seaborn
-timm
 tqdm
