@@ -1,31 +1,22 @@
 import asyncio
-import importlib.util
 import logging
 import pickle
 import time
 
 import fastapi
 
-
-def import_from_path(location):
-    spec = importlib.util.spec_from_file_location("", location)
-    assert spec, f"Failed to load {location}"
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
+from simple_func import FUNCTIONS
 
 # Config
-FUNC_SRC = "simple_func.py"
+FUNCTIONS: dict
 CONNS_LIMIT = 1  # Limit the number of connections
 
 # uvicorn server:app
 LOGGER = logging.getLogger("uvicorn")
-FUNCTIONS: dict = import_from_path(FUNC_SRC).FUNCTIONS
 app = fastapi.FastAPI(
     title="Functions API",
     description="author: [TongZJ](https://github.com/Instinct323)\n\n" +
-                "\n\n".join(f"## {k}\n\n{v.__doc__ or ''}" for k, v in FUNCTIONS.items()),
+                "\n\n".join(f"## {k}\n\n```\n{v.__doc__ or ''}\n```" for k, v in FUNCTIONS.items()),
     version="1.0.0"
 )
 CONNS = set()

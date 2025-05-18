@@ -49,11 +49,12 @@ class GroundingDINO:
         if self.nms_iou: dets = dets.with_nms(self.nms_iou)
         return dets
 
-    def annotate(self,
+    @classmethod
+    def annotate(cls,
                  image: np.ndarray,
                  detections: sv.Detections) -> np.ndarray:
-        return self.anno_label.annotate(
-            self.anno_box.annotate(image.copy(), detections=detections),
+        return cls.anno_label.annotate(
+            cls.anno_box.annotate(image.copy(), detections=detections),
             detections=detections, labels=detection_labels(detections)
         )
 
