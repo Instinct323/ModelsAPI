@@ -6,7 +6,7 @@ import torch
 from qwen_vl_utils import process_vision_info
 from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor, Qwen2_5_VLProcessor, Qwen2VLImageProcessorFast
 
-from utils import *
+from utils.utils import LOGGER, make_content
 
 
 class QwenVL:
