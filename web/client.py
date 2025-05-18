@@ -14,6 +14,14 @@ class FunctionsAPI:
     def __init__(self, url):
         self.url = url
         self.executor = concurrent.futures.ThreadPoolExecutor()
+        LOGGER.info("Connecting...")
+        while True:
+            try:
+                res = requests.get(f"{self.url}/docs")
+                if res.status_code == 200: break
+            except:
+                pass
+        LOGGER.info(f"See {self.url}/docs for API documentation.")
 
     def invoke(self, func, *args, **kwargs):
         t0 = time.time()
