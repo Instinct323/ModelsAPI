@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import supervision as sv
 
-from utils.utils import detection_labels
+from utils import detection_labels
 
 warnings.filterwarnings("ignore")
 
@@ -22,8 +22,8 @@ class GroundingDINO:
                  nms_iou: float = 0.5,
                  boxarea_thresh: float = 0.7):
         # Require to connect to Huggingface
-        from groundingdino.config import GroundingDINO_SwinT_OGC as config
-        self.model = inference.Model(config.__file__, "checkpoints/groundingdino_swint_ogc.pth")
+        # from groundingdino.config import GroundingDINO_SwinT_OGC as config
+        self.model = inference.Model("checkpoints/GroundingDINO_SwinT_OGC.py", "checkpoints/groundingdino_swint_ogc.pth")
         self.box_thresh = box_thresh
         self.text_thresh = text_thresh
         self.nms_iou = nms_iou

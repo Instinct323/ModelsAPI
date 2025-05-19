@@ -1,21 +1,11 @@
 import time
-from pathlib import Path
 from typing import Union, Tuple, List
 
 import torch
 from qwen_vl_utils import process_vision_info
 from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor, Qwen2_5_VLProcessor, Qwen2VLImageProcessorFast
 
-from utils.utils import LOGGER, make_content
-
-
-def huggingface_model_path(repo_id: str):
-    """ Download the model from Hugging Face. """
-    path = Path(f"~/.cache/huggingface/hub/models--{repo_id.replace('/', '--')}/snapshots").expanduser()
-    if not path.exists():
-        LOGGER.warning(f"If the loading time is too long, run the following command to download the model: huggingface-cli download {repo_id}")
-        return repo_id
-    return next(path.iterdir())
+from utils import LOGGER, make_content, huggingface_model_path
 
 
 class QwenVL:
