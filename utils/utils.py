@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 
 import PIL.Image
+import numpy as np
 import supervision as sv
 
 logging.basicConfig(format="[%(levelname)s] %(message)s", level=logging.INFO)
@@ -34,12 +35,22 @@ def make_content(role, **contents) -> dict:
     return {"role": role, "content": ret}
 
 
-def detection_labels(detections: sv.Detections):
-    if detections.class_id is not None:
-        return [
-            f"{phrase} {score:.2f}"
-            for phrase, score
-            in zip(detections.metadata[detections.class_id], detections.confidence)
-        ]
-    else:
-        return [f"{score:.2f}" for score in detections.confidence]
+def sv_annotate(image: np.ndarray,
+                detections: sv.Detections,
+                mask_opacity: float = 0.7,
+                smart_label: bool = True) -> np.ndarray:
+    """ :param image: OpenCV image
+        :param detections: Supervision Detections with xyxy, confidence ..."""
+    color_lookup = sv.ColorLookup.CLASS if detections.mask is None else sv.ColorLookup.INDEX
+    anno_mask = sv.MaskAnnotator(color_lookup=color_lookup, opacity=mask_opacity)
+    anno_box = sv.BoxAnnotator(color_lookup=color_lookup)
+    anno_label = sv.LabelAnnotator(color_lookup=color_lookup, smart_position=smart_label)
+
+    labels = [f"{score:.2f}" for score in detections.confidence] if detections.class_id is None else [
+        f"{phrase} {score:.2f}" for phrase, score in zip(detections.metadata[detections.class_id], detections.confidence)]
+
+    return anno_label.annotate(
+        anno_box.annotate(
+            anno_mask.annotate(image.copy(), detections=detections),
+            detections=detections),
+        detections=detections, labels=labels)
