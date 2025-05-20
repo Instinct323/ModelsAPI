@@ -29,6 +29,9 @@ class OpenCLIP:
             model_name, pretrained=str(next(huggingface_model_path(repo_id).iterdir())))
         self.model.eval().to(DEVICE)
         self.tokenizer = open_clip.get_tokenizer(model_name)
+        # Freeze parameters
+        for k, v in self.model.named_parameters():
+            v.requires_grad = False
 
     def encode_images(self, *images):
         """ Encode images
@@ -48,20 +51,14 @@ class OpenCLIP:
         x = self.model.encode_text(x)
         return x / x.norm(dim=-1, keepdim=True)
 
-    def class_activation_mapping(self,
-                                 image: Image, ):
-        x_img = self.preprocess(image).to(DEVICE)
-
 
 if __name__ == '__main__':
-    import PIL.Image
-
-    print(load_dinov2())
+    # print(load_dinov2())
 
     clip = OpenCLIP()
-    img = PIL.Image.open("assets/cat.jpg")
+    img = Image.open("assets/cat.jpg")
 
     with torch.no_grad():
-        img = clip.encode_images(img)
-        text = clip.encode_texts("a cat", "a dog")
-    print(img @ text.T)
+        feat_img = clip.encode_images(img)
+        feat_text = clip.encode_texts("a cat", "a dog")
+    print(feat_img @ feat_text.T)
