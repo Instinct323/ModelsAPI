@@ -2,9 +2,9 @@ from pathlib import Path
 from typing import Union
 
 import cv2
+import matplotlib
 import numpy as np
 import open3d as o3d
-import matplotlib
 
 RS_D435I = dict(w=640, h=480, fx=384.98394775390625, fy=384.98394775390625, cx=320.5026550292969, cy=240.8127899169922)
 O3D_TRANSFORM = np.eye(4)

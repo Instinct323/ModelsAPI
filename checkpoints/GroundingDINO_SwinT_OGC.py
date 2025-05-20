@@ -1,15 +1,14 @@
-import logging
+import os
 from pathlib import Path
-
-LOGGER = logging.getLogger("utils")
 
 
 def huggingface_model_path(repo_id: str) -> str:
     """ Download the model from Hugging Face. """
     path = Path(f"~/.cache/huggingface/hub/models--{repo_id.replace('/', '--')}/snapshots").expanduser()
     if not path.exists():
-        LOGGER.warning(f"If the loading time is too long, run the following command to download the model: huggingface-cli download {repo_id}")
-        return repo_id
+        print("Downloading model from Hugging Face...")
+        os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
+        os.system(f"huggingface-cli download {repo_id}")
     return str(next(path.iterdir()))
 
 

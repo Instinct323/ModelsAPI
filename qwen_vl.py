@@ -9,7 +9,6 @@ from utils import LOGGER, make_content, huggingface_model_path
 
 
 class QwenVL:
-    """ :param repo_id: huggingface-cli download <repo_id>"""
     patch_size = Qwen2VLImageProcessorFast.patch_size
     device = property(lambda self: self.model.device)
 
@@ -94,7 +93,7 @@ class QwenVL:
 if __name__ == '__main__':
     while True:
         try:
-            model = QwenVL("Qwen/Qwen2.5-VL-7B-Instruct", torch_dtype=torch.bfloat16)
+            model = QwenVL("Qwen/Qwen2.5-VL-3B-Instruct", torch_dtype=torch.bfloat16)
             break
         except OSError as e:
             LOGGER.error(e)

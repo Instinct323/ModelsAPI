@@ -1,4 +1,5 @@
 import torch
+from PIL import Image
 
 DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
@@ -44,14 +45,15 @@ class OpenCLIP:
         x = self.model.encode_text(x)
         return x / x.norm(dim=-1, keepdim=True)
 
+    def class_activation_mapping(self, image: Image, text: str):
+        pass
+
 
 if __name__ == '__main__':
-    import PIL.Image
-
-    print(load_dinov2())
+    # print(load_dinov2())
 
     clip = OpenCLIP()
-    img = PIL.Image.open("assets/cat.jpg")
+    img = Image.open("assets/cat.jpg")
 
     with torch.no_grad():
         img = clip.encode_images(img)
