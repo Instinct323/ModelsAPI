@@ -1,6 +1,8 @@
 import torch
 from PIL import Image
 
+from utils import huggingface_model_path
+
 DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
 
@@ -16,14 +18,15 @@ def load_dinov2(size: str = "b",
 
 
 class OpenCLIP:
-    """ https://github.com/mlfoundations/open_clip
-        :param pretrained: see open_clip/pretrained.py"""
+    """ :param model_name: see open_clip/pretrained.py
+        :param repo_id: see https://huggingface.co/laion?sort_models=likes#models"""
 
     def __init__(self,
                  model_name: str = "ViT-B-32",
-                 pretrained: str = "laion2b_s34b_b79k"):
+                 repo_id: str = "laion/CLIP-ViT-B-32-laion2B-s34B-b79K"):
         import open_clip
-        self.model, _, self.preprocess = open_clip.create_model_and_transforms(model_name, pretrained=pretrained)
+        self.model, _, self.preprocess = open_clip.create_model_and_transforms(
+            model_name, pretrained=str(next(huggingface_model_path(repo_id).iterdir())))
         self.model.eval().to(DEVICE)
         self.tokenizer = open_clip.get_tokenizer(model_name)
 
@@ -45,15 +48,18 @@ class OpenCLIP:
         x = self.model.encode_text(x)
         return x / x.norm(dim=-1, keepdim=True)
 
-    def class_activation_mapping(self, image: Image, text: str):
-        pass
+    def class_activation_mapping(self,
+                                 image: Image, ):
+        x_img = self.preprocess(image).to(DEVICE)
 
 
 if __name__ == '__main__':
-    # print(load_dinov2())
+    import PIL.Image
+
+    print(load_dinov2())
 
     clip = OpenCLIP()
-    img = Image.open("assets/cat.jpg")
+    img = PIL.Image.open("assets/cat.jpg")
 
     with torch.no_grad():
         img = clip.encode_images(img)

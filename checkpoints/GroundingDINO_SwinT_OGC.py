@@ -2,14 +2,14 @@ import os
 from pathlib import Path
 
 
-def huggingface_model_path(repo_id: str) -> str:
+def huggingface_model_path(repo_id: str) -> Path:
     """ Download the model from Hugging Face. """
     path = Path(f"~/.cache/huggingface/hub/models--{repo_id.replace('/', '--')}/snapshots").expanduser()
     if not path.exists():
         print("Downloading model from Hugging Face...")
         os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
         os.system(f"huggingface-cli download {repo_id}")
-    return str(next(path.iterdir()))
+    return next(path.iterdir())
 
 
 batch_size = 1
@@ -45,7 +45,7 @@ dn_bbox_coef = 1.0
 embed_init_tgt = True
 dn_labelbook_size = 2000
 max_text_len = 256
-text_encoder_type = huggingface_model_path("bert-base-uncased")
+text_encoder_type = str(huggingface_model_path("bert-base-uncased"))
 use_text_enhancer = True
 use_fusion_layer = True
 use_checkpoint = True

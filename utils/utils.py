@@ -10,14 +10,14 @@ logging.basicConfig(format="[%(levelname)s] %(message)s", level=logging.INFO)
 LOGGER = logging.getLogger("utils")
 
 
-def huggingface_model_path(repo_id: str) -> str:
+def huggingface_model_path(repo_id: str) -> Path:
     """ Download the model from Hugging Face. """
     path = Path(f"~/.cache/huggingface/hub/models--{repo_id.replace('/', '--')}/snapshots").expanduser()
     if not path.exists():
         print("Downloading model from Hugging Face...")
         os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
         os.system(f"huggingface-cli download {repo_id}")
-    return str(next(path.iterdir()))
+    return next(path.iterdir())
 
 
 def make_content(role, **contents) -> dict:
