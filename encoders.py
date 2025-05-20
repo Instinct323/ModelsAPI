@@ -29,9 +29,6 @@ class OpenCLIP:
             model_name, pretrained=str(next(huggingface_model_path(repo_id).iterdir())))
         self.model.eval().to(DEVICE)
         self.tokenizer = open_clip.get_tokenizer(model_name)
-        # Freeze parameters
-        for k, v in self.model.named_parameters():
-            v.requires_grad = False
 
     def encode_images(self, *images):
         """ Encode images
