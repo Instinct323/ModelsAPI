@@ -40,19 +40,25 @@ def make_content(role, **contents) -> dict:
 def sv_annotate(image: np.ndarray,
                 detections: sv.Detections,
                 mask_opacity: float = 0.7,
+                anno_box: bool = True,
                 smart_label: bool = True) -> np.ndarray:
     """ :param image: OpenCV image
         :param detections: Supervision Detections with xyxy, confidence ..."""
     color_lookup = sv.ColorLookup.CLASS if detections.mask is None else sv.ColorLookup.INDEX
-    anno_mask = sv.MaskAnnotator(color_lookup=color_lookup, opacity=mask_opacity)
-    anno_box = sv.BoxAnnotator(color_lookup=color_lookup)
-    anno_label = sv.LabelAnnotator(color_lookup=color_lookup, smart_position=smart_label)
+    image = image.copy()
 
-    labels = [f"{score:.2f}" for score in detections.confidence] if detections.class_id is None else [
-        f"{phrase} {score:.2f}" for phrase, score in zip(detections.metadata[detections.class_id], detections.confidence)]
+    if anno_box:
+        anno_box = sv.BoxAnnotator(color_lookup=color_lookup)
+        image = anno_box.annotate(image, detections=detections)
 
-    return anno_label.annotate(
-        anno_box.annotate(
-            anno_mask.annotate(image.copy(), detections=detections),
-            detections=detections),
-        detections=detections, labels=labels)
+    if detections.mask is not None:
+        anno_mask = sv.MaskAnnotator(color_lookup=color_lookup, opacity=mask_opacity)
+        image = anno_mask.annotate(image, detections=detections)
+
+    if detections.confidence is not None:
+        anno_label = sv.LabelAnnotator(color_lookup=color_lookup, smart_position=smart_label)
+        labels = [f"{score:.2f}" for score in detections.confidence] if detections.class_id is None else [
+            f"{phrase} {score:.2f}" for phrase, score in zip(detections.metadata[detections.class_id], detections.confidence)]
+        image = anno_label.annotate(image, detections=detections, labels=labels)
+
+    return image

@@ -17,7 +17,10 @@ class SegmentAnythingV2:
     anno_box = sv.BoxAnnotator(color_lookup=sv.ColorLookup.INDEX)
     anno_label = sv.LabelAnnotator(color_lookup=sv.ColorLookup.INDEX, smart_position=True)
 
-    def __init__(self, encoder):
+    def __init__(self,
+                 encoder: str,
+                 mask_thresh: float = 0.,
+                 points_per_side: int = 32):
         encoder_type = {"tiny": "t", "small": "s", "base_plus": "b+", "large": "l"}
         assert encoder in encoder_type
 
@@ -25,9 +28,9 @@ class SegmentAnythingV2:
         model_cfg = f"configs/sam2.1/sam2.1_hiera_{encoder_type[encoder]}.yaml"
 
         sam2 = build_sam2(model_cfg, checkpoint)
-        self.predictor = SAM2ImagePredictor(sam2)
+        self.predictor = SAM2ImagePredictor(sam2, mask_threshold=mask_thresh)
         # self.video_predictor = build_sam2_video_predictor(model_cfg, checkpoint)
-        self.auto_predictor = SAM2AutomaticMaskGenerator(sam2)
+        self.auto_predictor = SAM2AutomaticMaskGenerator(sam2, mask_threshold=mask_thresh, points_per_side=points_per_side)
 
     def __call__(self,
                  image: np.ndarray,
@@ -49,6 +52,8 @@ class SegmentAnythingV2:
             )
 
 
+SegmentAnythingV2.__call__.__doc__ = SAM2ImagePredictor.predict.__doc__
+
 if __name__ == '__main__':
     from utils.realsense import rgbd_flow
     import matplotlib.pyplot as plt
@@ -64,10 +69,14 @@ if __name__ == '__main__':
                     point_coords=point,
                     point_labels=np.ones(len(point), dtype=np.bool_))
         print(dets)
-        cv2.imwrite("runs/sam2.png", sv_annotate(image, dets))
+        cv2.imwrite("runs/sam2.png", sv_annotate(image, dets, anno_box=False))
+
+        dets = sam2(image)
+        print(dets)
+        cv2.imwrite("runs/sam2_all.png", sv_annotate(image, dets, anno_box=False))
 
     for c, d in rgbd_flow(640, 480, show=False):
         dets = sam2(c)
         print(dets.confidence)
-        plt.imshow(sv_annotate(c, dets))
+        plt.imshow(sv_annotate(c, dets, anno_box=False))
         plt.pause(1e-3)
