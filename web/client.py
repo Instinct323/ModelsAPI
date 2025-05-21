@@ -18,11 +18,12 @@ class FunctionsAPI:
         LOGGER.info(f"See {self.url}/docs for API documentation.")
 
     def invoke(self, func, *args, **kwargs):
-        t0 = time.time()
         data = {"func": func, "args": args, "kwargs": kwargs}
-        response = requests.post(f"{self.url}/invoke", data=pickle.dumps(data))
+        response = requests.post(f"{self.url}/invoke", data=pickle.dumps(data), headers={"t-send": str(int(time.time()))})
         assert response.status_code == 200, f"{response.status_code}, {response.text}"
-        LOGGER.info(f"{func}: {time.time() - t0:.3f}s")
+
+        headers = response.headers
+        LOGGER.info(f"[{func}] {headers['cost']}, recv:{time.time() - float(headers['t-send']):.3f}s")
         return pickle.loads(response.content)
 
     def invoke_async(self, func, *args, **kwargs):

@@ -26,6 +26,7 @@ CONNS_LOCK = asyncio.Lock()
 @app.post("/invoke")
 async def invoke(request: fastapi.Request):
     """ Invoke a function on the server. """
+    cost = {"send": time.time() - float(request.headers["t-send"])}
     # Limit the number of connections
     t0 = time.time()
     host = request.client.host
@@ -46,11 +47,15 @@ async def invoke(request: fastapi.Request):
     func = FUNCTIONS.get(data["func"])
     if func is None:
         raise fastapi.HTTPException(status_code=404, detail=f"Function {data['func']} not found.")
+    cost["load"] = time.time() - t0
     # Handle runtime errors
-    t1 = time.time()
+    t0 = time.time()
     try:
         result = await asyncio.to_thread(func, *data["args"], **data["kwargs"])
-        LOGGER.info(f"[{data['func']}] check {t1 - t0:.3f}s, invoke {time.time() - t1:.3f}s")
-        return fastapi.Response(content=pickle.dumps(result), media_type="application/octet-stream")
+        cost["invoke"] = time.time() - t0
+        cost = ", ".join(f"{k}:{v:.3f}s" for k, v in cost.items())
+        LOGGER.info(f"[{data['func']}] {cost}")
+        return fastapi.Response(content=pickle.dumps(result), media_type="application/octet-stream",
+                                headers={"t-send": str(int(time.time())), "cost": cost})
     except Exception as e:
         raise fastapi.HTTPException(status_code=500, detail=f"{e}")

@@ -20,7 +20,8 @@ class SegmentAnythingV2:
     def __init__(self,
                  encoder: str,
                  mask_thresh: float = 0.,
-                 points_per_side: int = 32):
+                 points_per_side: int = 32,
+                 max_sprinkle_area: int = 0):
         encoder_type = {"tiny": "t", "small": "s", "base_plus": "b+", "large": "l"}
         assert encoder in encoder_type
 
@@ -28,9 +29,10 @@ class SegmentAnythingV2:
         model_cfg = f"configs/sam2.1/sam2.1_hiera_{encoder_type[encoder]}.yaml"
 
         sam2 = build_sam2(model_cfg, checkpoint)
-        self.predictor = SAM2ImagePredictor(sam2, mask_threshold=mask_thresh)
+        self.predictor = SAM2ImagePredictor(sam2, mask_threshold=mask_thresh, max_sprinkle_area=max_sprinkle_area)
         # self.video_predictor = build_sam2_video_predictor(model_cfg, checkpoint)
-        self.auto_predictor = SAM2AutomaticMaskGenerator(sam2, mask_threshold=mask_thresh, points_per_side=points_per_side)
+        self.auto_predictor = SAM2AutomaticMaskGenerator(sam2, mask_threshold=mask_thresh,
+                                                         points_per_side=points_per_side, min_mask_region_area=max_sprinkle_area)
 
     def __call__(self,
                  image: np.ndarray,
