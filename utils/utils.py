@@ -1,8 +1,10 @@
+import base64
 import logging
 import os
 from pathlib import Path
+from typing import Union
 
-import PIL.Image
+import cv2
 import numpy as np
 import supervision as sv
 
@@ -18,23 +20,6 @@ def huggingface_model_path(repo_id: str) -> Path:
         os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
         os.system(f"huggingface-cli download {repo_id}")
     return next(path.iterdir())
-
-
-def make_content(role, **contents) -> dict:
-    """ :param role: user, assistant, system
-        :param contents: The input contents (e.g., text, image, video)."""
-    ret = []
-    for t, v in contents.items():
-        if t in ("image", "video"):
-            if isinstance(v, Path): v = f"file://{v}"
-            for x in (v if isinstance(v, list) else [v]):
-                assert isinstance(x, PIL.Image.Image) or any(x.startswith(prefix) for prefix in ("http", "file://"))
-        elif t == "text":
-            assert isinstance(v, str)
-        else:
-            raise TypeError(f"Unsupported content type: {t}")
-        ret.append({"type": t, t: v})
-    return {"role": role, "content": ret}
 
 
 def sv_annotate(image: np.ndarray,
@@ -62,3 +47,38 @@ def sv_annotate(image: np.ndarray,
         image = anno_label.annotate(image, detections=detections, labels=labels)
 
     return image
+
+
+class ContentMaker:
+
+    def __init__(self,
+                 local_run: bool,
+                 max_img_size: int = 640):
+        self.local_run = local_run
+        self.max_img_size = max_img_size
+
+    def process_text(self, text: str):
+        assert isinstance(text, str)
+        return text
+
+    def process_image(self, img: np.ndarray):
+        assert isinstance(img, np.ndarray)
+        if max(img.shape[:2]) > self.max_img_size:
+            img = sv.resize_image(img, (self.max_img_size,) * 2, keep_aspect_ratio=True)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        return sv.cv2_to_pillow(img) if self.local_run else (
+                f"data:image/jpg;base64," + base64.b64encode(cv2.imencode(".jpg", img)[1]).decode("utf-8"))
+
+    def __call__(self,
+                 role: str,
+                 text: str,
+                 image: Union[np.ndarray, list[np.ndarray]] = None):
+        """ :param role: user, assistant, system """
+        to_element = lambda t, v: {"type": t, t: v}
+        ret = [to_element("text", self.process_text(text))]
+        if image is not None:
+            # Multiple images are supported
+            img_t = "image" if self.local_run else "image_url"
+            for img in [image] if isinstance(image, np.ndarray) else image:
+                ret.append(to_element(img_t, self.process_image(img)))
+        return {"role": role, "content": ret}

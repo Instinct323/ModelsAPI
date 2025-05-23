@@ -11,13 +11,21 @@ LOGGER = logging.getLogger("utils")
 
 class FunctionsAPI:
 
-    def __init__(self, url):
+    def __init__(self,
+                 url: str = None,
+                 functions: dict = None):
         self.url = url
+        self.functions = functions
         self.executor = concurrent.futures.ThreadPoolExecutor()
-        assert requests.get(f"{self.url}/docs").status_code == 200
-        LOGGER.info(f"See {self.url}/docs for API documentation.")
+
+        assert self.url or self.functions, "Please provide either a URL or a function dictionary."
+        if self.url:
+            assert requests.get(f"{self.url}/docs").status_code == 200
+            LOGGER.info(f"See {self.url}/docs for API documentation.")
 
     def invoke(self, func, *args, **kwargs):
+        if self.functions: return self.functions[func](*args, **kwargs)
+
         data = {"func": func, "args": args, "kwargs": kwargs}
         response = requests.post(f"{self.url}/invoke", data=pickle.dumps(data), headers={"t-send": str(int(time.time()))})
         assert response.status_code == 200, f"{response.status_code}, {response.text}"

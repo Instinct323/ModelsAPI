@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 import pyrealsense2 as rs
 
+DEVICES = rs.context().query_devices()
+
 
 def frame2numpy(frame: rs.frame) -> np.ndarray:
     return np.asanyarray(frame.get_data())
@@ -11,8 +13,11 @@ def get_intrinsics(frame: rs.frame):
     return frame.profile.as_video_stream_profile().intrinsics
 
 
-def rgbd_flow(w, h, fps=30, show=True):
+def rgbd_flow(w, h, fps=30,
+              device_id=0,
+              show=True):
     cfg = rs.config()
+    cfg.enable_device(DEVICES[device_id].get_info(rs.camera_info.serial_number))
     cfg.enable_stream(rs.stream.color, w, h, rs.format.rgb8, fps)
     cfg.enable_stream(rs.stream.depth, w, h, rs.format.z16, fps)
 
@@ -39,8 +44,5 @@ def rgbd_flow(w, h, fps=30, show=True):
 
 
 if __name__ == '__main__':
-    devices = rs.context().query_devices()
-    for i in devices: print(i)
-
-    for c, d in rgbd_flow(640, 480):
+    for c, d in rgbd_flow(640, 480, device_id=1):
         pass

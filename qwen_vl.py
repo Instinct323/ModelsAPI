@@ -1,11 +1,12 @@
 import time
 from typing import Union, Tuple, List
 
+import cv2
 import torch
 from qwen_vl_utils import process_vision_info
 from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor, Qwen2_5_VLProcessor, Qwen2VLImageProcessorFast
 
-from utils import LOGGER, make_content, huggingface_model_path
+from utils import LOGGER, huggingface_model_path, ContentMaker
 
 
 class QwenVL:
@@ -36,6 +37,7 @@ class QwenVL:
             repo_id, torch_dtype=torch_dtype, device_map=device_map,
         )
         LOGGER.info(f"Model loaded in {time.time() - t0:.2f}s.")
+        self.cont_maker = ContentMaker(True)
 
     def get_input_tensor(self,
                          messages,
@@ -71,7 +73,7 @@ class QwenVL:
             :param max_new_tokens: The maximum number of new tokens to generate.
             :param contents: The input contents (e.g., text, image, video)."""
         return self.generate(self.get_input_tensor([
-            make_content("user", **contents)
+            self.cont_maker("user", **contents)
         ]), max_new_tokens=max_new_tokens)[0]
 
     def chat(self,
@@ -81,8 +83,8 @@ class QwenVL:
         while True:
             msg = input("User: ")
             if msg == "exit": break
-            messages.append(make_content("user", text=msg))
-            messages.append(make_content("assistant", text=self.generate(self.get_input_tensor(messages), max_new_tokens)[0]))
+            messages.append(self.cont_maker("user", text=msg))
+            messages.append(self.cont_maker("assistant", text=self.generate(self.get_input_tensor(messages), max_new_tokens)[0]))
 
             text = messages[-1]["content"]
             text = text[0] if isinstance(text, list) else text
@@ -99,7 +101,6 @@ if __name__ == '__main__':
             LOGGER.error(e)
             LOGGER.warning(f"An error has occurred. Try again...")
 
-    print(model.query_once(512, text="描述这张图片",
-                           image="https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg"))
+    print(model.query_once(512, text="描述这张图片", image=cv2.imread("assets/cat.jpg")))
 
     for ctx in model.chat(512): print(ctx)

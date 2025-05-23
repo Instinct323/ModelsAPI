@@ -1,7 +1,9 @@
 import time
 
-import numpy as np
+import cv2
 import torch
+
+from utils.zjcv import *
 
 DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
@@ -61,11 +63,15 @@ class DepthAnythingV2:
 
 
 if __name__ == '__main__':
-    from utils.zjcv import *
     import open3d as o3d
 
     model = DepthAnythingV2("vitb")
     camera = Pinhole(**RS_D435I)
+
+
+    def depth_mask(depth):
+        return (depth > 0) * (depth < 5.0)
+
 
     if 1:
         # Infer a single image
@@ -76,13 +82,15 @@ if __name__ == '__main__':
         # Depth to Point Cloud
         t0 = time.time()
         pred = rectify_depth(model(color), depth)
-        pcd = to_colorful_pcd(*camera.unproj(pred), color)
+        mask = depth_mask(pred)
+        pcd = to_colorful_pcd(camera.unproj(pred)[mask], mask, color)
         # pcd.transform(O3D_TRANSFORM)
         print("FPS:", 1 / (time.time() - t0))
 
         transform = np.eye(4)
         transform[0, 3] = 3
-        org = to_colorful_pcd(*camera.unproj(depth), color)
+        mask = depth_mask(depth)
+        org = to_colorful_pcd(camera.unproj(depth)[mask], mask, color)
         org.transform(transform)
         o3d.visualization.draw_geometries([pcd, org, o3d.geometry.TriangleMesh.create_coordinate_frame(size=1)])
 
@@ -101,7 +109,8 @@ if __name__ == '__main__':
         fps = 1 / (time.time() - t0)
         print(f"FPS: {fps:.2f}")
 
-        pcd = to_colorful_pcd(*camera.unproj(pred), color, pcd=pcd)
+        mask = depth_mask(pred)
+        pcd = to_colorful_pcd(camera.unproj(pred)[mask], mask, color, pcd=pcd)
         pcd.transform(O3D_TRANSFORM)
 
         vis.add_geometry(pcd, reset_bounding_box=False)

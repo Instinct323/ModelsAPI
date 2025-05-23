@@ -7,3 +7,7 @@ FUNCTIONS = {
     "sleep": time.sleep,
     "round": np.round
 }
+
+
+def invoke(func, *args, **kwargs):
+    return FUNCTIONS[func](*args, **kwargs)
