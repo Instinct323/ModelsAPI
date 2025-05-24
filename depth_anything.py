@@ -64,9 +64,10 @@ class DepthAnythingV2:
 
 if __name__ == '__main__':
     import open3d as o3d
+    from utils.camera import Camera
 
     model = DepthAnythingV2("vitb")
-    camera = Pinhole(**RS_D435I)
+    camera = Camera.from_yaml("cfg/RS-D435i.yaml")
 
 
     def depth_mask(depth):
@@ -83,14 +84,14 @@ if __name__ == '__main__':
         t0 = time.time()
         pred = rectify_depth(model(color), depth)
         mask = depth_mask(pred)
-        pcd = to_colorful_pcd(camera.unproj(pred)[mask], mask, color)
+        pcd = remove_radius_outlier(to_colorful_pcd(camera.unproject_depth(pred), color, mask))
         # pcd.transform(O3D_TRANSFORM)
         print("FPS:", 1 / (time.time() - t0))
 
         transform = np.eye(4)
         transform[0, 3] = 3
         mask = depth_mask(depth)
-        org = to_colorful_pcd(camera.unproj(depth)[mask], mask, color)
+        org = remove_radius_outlier(to_colorful_pcd(camera.unproject_depth(depth), color, mask))
         org.transform(transform)
         o3d.visualization.draw_geometries([pcd, org, o3d.geometry.TriangleMesh.create_coordinate_frame(size=1)])
 
@@ -101,7 +102,7 @@ if __name__ == '__main__':
     vis.create_window()
 
     pcd = o3d.geometry.PointCloud()
-    for color, depth in rgbd_flow(*camera.size):
+    for color, depth in rgbd_flow(*camera.img_size):
         depth = depth.astype(np.float64) / 1000
 
         t0 = time.time()
@@ -110,7 +111,7 @@ if __name__ == '__main__':
         print(f"FPS: {fps:.2f}")
 
         mask = depth_mask(pred)
-        pcd = to_colorful_pcd(camera.unproj(pred)[mask], mask, color, pcd=pcd)
+        pcd = remove_radius_outlier(to_colorful_pcd(camera.unproject_depth(pred), color, mask, pcd=pcd))
         pcd.transform(O3D_TRANSFORM)
 
         vis.add_geometry(pcd, reset_bounding_box=False)

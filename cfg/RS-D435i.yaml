@@ -1,0 +1,4 @@
+type: Pinhole
+img_size: [ 640, 480 ]  # [height, width]
+intrinsics: [ 384.98394775390625, 384.98394775390625, 320.5026550292969, 240.8127899169922 ]  # fx, fy, cx, cy
+dist_coeffs: [ ]

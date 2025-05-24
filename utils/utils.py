@@ -1,6 +1,8 @@
 import base64
+import json
 import logging
 import os
+import re
 from pathlib import Path
 from typing import Union
 
@@ -82,3 +84,55 @@ class ContentMaker:
             for img in [image] if isinstance(image, np.ndarray) else image:
                 ret.append(to_element(img_t, self.process_image(img)))
         return {"role": role, "content": ret}
+
+
+class JSONprompter(dict):
+
+    def prompt(self):
+        return ("\nYour response should be formatted as a JSON code block, without any additional text. "
+                "The required fields are:\n" + "\n".join(f"- {k}: {v}" for k, v in self.items()))
+
+    def decode(self,
+               response: str):
+        content = re.search(r"\{.*}", response, flags=re.S)
+        try:
+            return json.loads(content.group(0))
+        except:
+            raise ValueError(f"Invalid JSON response: {response}")
+
+
+class GridAnnotator:
+
+    def __init__(self,
+                 ngrid: int,
+                 color: tuple = (255, 255, 255),
+                 thickness: float = 5e-3):
+        self.ngrid = ngrid
+        self.color = color
+        self.thickness = thickness
+
+    def make_grid(self, w, h):
+        nr = round(np.sqrt(self.ngrid / h * w))
+        nc = round(np.sqrt(self.ngrid * h / w))
+        rows = np.round(np.linspace(0, h - 1, nr + 1)).astype(int)
+        cols = np.round(np.linspace(0, w - 1, nc + 1)).astype(int)
+        return dict(rows=rows, cols=cols, ngrid=nr * nc, shape=(nr, nc))
+
+    def annotate(self,
+                 image: np.ndarray,
+                 grid_info: dict):
+        image = image.copy()
+        h, w = image.shape[:2]
+        thickness = max(1, round(min(h, w) * self.thickness))
+        for r in grid_info["rows"]: cv2.line(image, (0, r), (w, r), self.color, thickness)
+        for c in grid_info["cols"]: cv2.line(image, (c, 0), (c, h), self.color, thickness)
+        return image
+
+    def index_grid(self,
+                   grid_id: int,
+                   grid_info: dict):
+        if grid_id >= grid_info["ngrid"] or grid_id < 0: return None
+        nr, nc = grid_info["shape"]
+        r, c = grid_id // nc, grid_id % nc
+        rows, cols = grid_info["rows"], grid_info["cols"]
+        return np.array([cols[c], rows[r], cols[c + 1], rows[r + 1]])
