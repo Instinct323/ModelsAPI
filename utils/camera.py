@@ -1,5 +1,4 @@
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
 import yaml
 
@@ -125,6 +124,6 @@ if __name__ == '__main__':
     cam = Camera.from_yaml("../cfg/RS-D405.yaml")
     print(cam)
     img = cv2.imread("../assets/color.png")
+    normal_plane = cam.normalized_plane(img)
 
-    plt.imshow(cam.normalized_plane(img))
-    plt.show()
+    # plt.imshow(normal_plane), plt.show()
