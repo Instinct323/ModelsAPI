@@ -18,8 +18,10 @@ class ContactGraspNet:
 
     def __call__(self,
                  pcd: np.ndarray):
-        """ :param pcd: point cloud with shape (N, 3)
-            :returns: T_grasp_cam [n, 4, 4], scores [n,], contact_pts [n, 3], gripper_openings [n,]"""
+        """
+        :param pcd: point cloud with shape (N, 3)
+        :returns: T_grasp_cam [n, 4, 4], scores [n,], contact_pts [n, 3], gripper_openings [n,]
+        """
         return [x[-1] for x in self.estimator.predict_scene_grasps(pcd)]
 
 

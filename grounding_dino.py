@@ -32,9 +32,11 @@ class GroundingDINO:
     def __call__(self,
                  image: np.ndarray,
                  caption: str) -> sv.Detections:
-        """ Open-vocabulary object detection
-            :param image: OpenCV image
-            :param caption: text prompt """
+        """
+        Open-vocabulary object detection
+        :param image: OpenCV image
+        :param caption: text prompt
+        """
         dets, phrases = self.model.predict_with_caption(
             image, caption,
             box_threshold=self.box_thresh,

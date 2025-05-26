@@ -16,9 +16,11 @@ def to_colorful_pcd(points: np.ndarray,
                     color: np.ndarray,
                     mask: np.ndarray,
                     pcd: o3d.geometry.PointCloud = None):
-    """ :param points: 3D points in camera coordinates [H, W, 3]
-        :param color: RGB color [H, W, 3]
-        :param mask: mask of the points [H, W] """
+    """
+    :param points: 3D points in camera coordinates [H, W, 3]
+    :param color: RGB color [H, W, 3]
+    :param mask: mask of the points [H, W]
+    """
     pcd = pcd or o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(points[mask])
     pcd.colors = o3d.utility.Vector3dVector(color[mask][:, ::-1] / 255)

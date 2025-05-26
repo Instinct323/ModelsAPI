@@ -8,18 +8,22 @@ DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is
 
 def load_dinov2(size: str = "b",
                 with_reg: bool = True):
-    """ https://github.com/facebookresearch/dinov2
-        :return DinoVisionTransformer
-            forward(x) -> [B, C]
-            get_intermediate_layers(x, n, reshape=True) -> n * [B, N, h, w]"""
+    """
+    https://github.com/facebookresearch/dinov2
+    :return DinoVisionTransformer
+        forward(x) -> [B, C]
+        get_intermediate_layers(x, n, reshape=True) -> n * [B, N, h, w]
+    """
     repo = "facebookresearch/dinov2"
     assert size in "sblg"
     return torch.hub.load(repo, f"dinov2_vit{size}14" + "_reg" * with_reg).eval().to(DEVICE)
 
 
 class OpenCLIP:
-    """ :param model_name: see open_clip/pretrained.py
-        :param repo_id: see https://huggingface.co/laion?sort_models=likes#models"""
+    """
+    :param model_name: see open_clip/pretrained.py
+    :param repo_id: see https://huggingface.co/laion?sort_models=likes#models
+    """
 
     def __init__(self,
                  model_name: str = "ViT-B-32",
@@ -31,18 +35,22 @@ class OpenCLIP:
         self.tokenizer = open_clip.get_tokenizer(model_name)
 
     def encode_images(self, *images):
-        """ Encode images
-            :param images: a list of PIL images
-            :return: feature vectors with shape [B, C] """
+        """
+        Encode images
+        :param images: a list of PIL images
+        :return: feature vectors with shape [B, C]
+        """
         # [B, C, H, W] -> [B, C]
         x = torch.stack(list(map(self.preprocess, images))).to(DEVICE)
         x = self.model.encode_image(x)
         return x / x.norm(dim=-1, keepdim=True)
 
     def encode_texts(self, *texts):
-        """ Encode texts
-            :param texts: a list of texts
-            :return: feature vectors with shape [B, C] """
+        """
+        Encode texts
+        :param texts: a list of texts
+        :return: feature vectors with shape [B, C]
+        """
         # [B, L] -> [B, C]
         x = self.tokenizer(texts).to(DEVICE)
         x = self.model.encode_text(x)

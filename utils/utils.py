@@ -29,8 +29,10 @@ def sv_annotate(image: np.ndarray,
                 mask_opacity: float = 0.7,
                 anno_box: bool = True,
                 smart_label: bool = True) -> np.ndarray:
-    """ :param image: OpenCV image
-        :param detections: Supervision Detections with xyxy, confidence ..."""
+    """
+    :param image: OpenCV image
+    :param detections: Supervision Detections with xyxy, confidence ...
+    """
     color_lookup = sv.ColorLookup.CLASS if detections.mask is None else sv.ColorLookup.INDEX
     image = image.copy()
 

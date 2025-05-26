@@ -11,8 +11,10 @@ from utils import sv_annotate
 
 
 class SegmentAnythingV2:
-    """ https://github.com/facebookresearch/sam2
-        :param encoder: Encoder type (tiny, small, base_plus, large)"""
+    """
+    https://github.com/facebookresearch/sam2
+    :param encoder: Encoder type (tiny, small, base_plus, large)
+    """
     anno_mask = sv.MaskAnnotator(color_lookup=sv.ColorLookup.INDEX, opacity=0.7)
     anno_box = sv.BoxAnnotator(color_lookup=sv.ColorLookup.INDEX)
     anno_label = sv.LabelAnnotator(color_lookup=sv.ColorLookup.INDEX, smart_position=True)
