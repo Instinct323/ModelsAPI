@@ -1,4 +1,5 @@
-# python==3.10.16
+# python==3.10
+huggingface_hub
 jupyter
 matplotlib
 numpy<2

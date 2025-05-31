@@ -90,14 +90,14 @@ if __name__ == '__main__':
         t0 = time.time()
         pred = rectify_depth(model(color), depth)
         mask = depth_mask(pred)
-        pcd = remove_radius_outlier(to_colorful_pcd(camera.unproject_depth(pred), color, mask))
+        pcd = remove_radius_outlier(to_colorful_pcd(camera.pointmap(pred), color, mask))
         # pcd.transform(O3D_TRANSFORM)
         print("FPS:", 1 / (time.time() - t0))
 
         transform = np.eye(4)
         transform[0, 3] = 3
         mask = depth_mask(depth)
-        org = remove_radius_outlier(to_colorful_pcd(camera.unproject_depth(depth), color, mask))
+        org = remove_radius_outlier(to_colorful_pcd(camera.pointmap(depth), color, mask))
         org.transform(transform)
         o3d.visualization.draw_geometries([pcd, org, o3d.geometry.TriangleMesh.create_coordinate_frame(size=1)])
 
@@ -117,7 +117,7 @@ if __name__ == '__main__':
         print(f"FPS: {fps:.2f}")
 
         mask = depth_mask(pred)
-        pcd = remove_radius_outlier(to_colorful_pcd(camera.unproject_depth(pred), color, mask, pcd=pcd))
+        pcd = remove_radius_outlier(to_colorful_pcd(camera.pointmap(pred), color, mask, pcd=pcd))
         pcd.transform(O3D_TRANSFORM)
 
         vis.add_geometry(pcd, reset_bounding_box=False)

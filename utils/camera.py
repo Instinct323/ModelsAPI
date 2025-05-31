@@ -20,7 +20,7 @@ class Camera:
     def from_yaml(cls, cfg) -> 'Camera':
         with open(cfg, 'r') as f:
             cfg = yaml.load(f.read(), Loader=yaml.Loader)
-        return eval("_" + cfg.pop("type"))(**cfg)
+        return eval(cfg.pop("type"))(**cfg)
 
     def camera_matrix(self):
         """Camera matrix"""
@@ -36,8 +36,8 @@ class Camera:
         pixels = pixels.astype(np.float32)
         return cv2.remap(self._unproj[..., :2], pixels[..., 0], pixels[..., 1], interpolation=cv2.INTER_LINEAR)
 
-    def unproject_depth(self, depth: np.ndarray = None):
-        """ Unproject 2D image plane to 3D points """
+    def pointmap(self, depth: np.ndarray = None):
+        """ Generate point cloud from depth map """
         return self._unproj.copy() if depth is None else self._unproj * depth[..., None]
 
     def undistort(self, img: np.ndarray):
@@ -54,7 +54,7 @@ class Camera:
         return cv2.remap(img, pixels[..., 0], pixels[..., 1], interpolation=cv2.INTER_LINEAR)
 
 
-class _Pinhole(Camera):
+class Pinhole(Camera):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -73,7 +73,7 @@ class _Pinhole(Camera):
         return pcd[..., :2] / pcd[..., 2:] * self.intrinsics[:2] + self.intrinsics[2:]
 
 
-class _KannalaBrandt(Camera):
+class KannalaBrandt(Camera):
     MAX_FOV = 180
 
     def __init__(self, **kwargs):

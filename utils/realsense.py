@@ -13,9 +13,7 @@ def get_intrinsics(frame: rs.frame):
     return frame.profile.as_video_stream_profile().intrinsics
 
 
-def rgbd_flow(w, h, fps=30,
-              device_id=0,
-              show=True):
+def rgbd_flow(w, h, fps=30, device_id=0):
     cfg = rs.config()
     cfg.enable_device(DEVICES[device_id].get_info(rs.camera_info.serial_number))
     cfg.enable_stream(rs.stream.color, w, h, rs.format.rgb8, fps)
@@ -23,9 +21,10 @@ def rgbd_flow(w, h, fps=30,
 
     pipe = rs.pipeline()
     pipe.start(cfg)
+    align = rs.align(rs.stream.color)
 
     while True:
-        frames = pipe.wait_for_frames()
+        frames = align.process(pipe.wait_for_frames())
         color_frame = frames.get_color_frame()
         depth_frame = frames.get_depth_frame()
 
@@ -33,16 +32,18 @@ def rgbd_flow(w, h, fps=30,
         color_image = cv2.cvtColor(frame2numpy(color_frame), cv2.COLOR_RGB2BGR)
         depth_image = frame2numpy(depth_frame)
 
-        if show:
-            images = np.hstack((color_image, cv2.applyColorMap(
-                cv2.convertScaleAbs(depth_image, alpha=0.03),
-                cv2.COLORMAP_JET)))
-            cv2.imshow('RealSense', images)
-            cv2.waitKey(1)
-
         yield color_image, depth_image
 
 
 if __name__ == '__main__':
-    for c, d in rgbd_flow(640, 480, device_id=1):
-        pass
+    import matplotlib.pyplot as plt
+
+    for color, depth in rgbd_flow(640, 480, device_id=0):
+        to_show = np.vstack((color, cv2.applyColorMap(
+            cv2.convertScaleAbs(depth, alpha=0.03),
+            cv2.COLORMAP_JET)))
+        cv2.imwrite("../runs/rs-c.png", color)
+        cv2.imwrite("../runs/rs-d.png", depth)
+        plt.imshow(to_show[..., ::-1])
+        plt.pause(1e-3)
+

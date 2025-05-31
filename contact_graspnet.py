@@ -26,8 +26,20 @@ class ContactGraspNet:
 
 
 if __name__ == '__main__':
+    import open3d as o3d
+    from utils.camera import Pinhole
+    from utils.zjcv import to_colorful_pcd
+
+    # Load RGB-D data
+    struct = np.load("assets/rgb-depth-K.npy", allow_pickle=True).item()
+    camera = Pinhole(img_size=struct["depth"].shape[::-1],
+                     intrinsics=struct["K"][[0, 1, 0, 1], [0, 1, 2, 2]])
+    pcd = camera.pointmap(struct["depth"]).astype(np.float32)
+    mask = (pcd[..., 2] > 0) & (pcd[..., 2] < 1.8)
+    o3d.visualization.draw_geometries([to_colorful_pcd(pcd, struct["rgb"], mask)])
+    pcd = pcd[mask]
+
+    # Infer grasp poses
     cgn = ContactGraspNet()
-    pcd = np.random.rand(20000, 3).astype(np.float32)
     res = cgn(pcd)
-    for i in res:
-        print(i.shape)
+    for i in res: print(i.shape)
