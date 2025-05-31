@@ -50,6 +50,12 @@ pip install accelerate huggingface_hub[hf_xet] qwen-vl-utils[decord] transformer
 pip install hydra-core iopath
 ```
 
+- [VGGT](https://github.com/facebookresearch/vggt)
+
+```bash
+pip install git+https://github.com/facebookresearch/vggt
+```
+
 # Web
 
 Install the following packages to run the web server:
