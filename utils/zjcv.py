@@ -23,7 +23,7 @@ def to_colorful_pcd(pointmap: np.ndarray,
     """
     pcd = pcd or o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(pointmap[mask])
-    pcd.colors = o3d.utility.Vector3dVector(color[mask][:, ::-1] / 255)
+    pcd.colors = o3d.utility.Vector3dVector(color[mask][..., ::-1] / 255)
     return pcd
 
 
