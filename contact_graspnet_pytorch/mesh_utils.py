@@ -175,7 +175,7 @@ class PandaGripper(object):
         return control_points
 
 
-def create_gripper(name, configuration=None, root_folder=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))):
+def create_gripper(name, configuration=None, root_folder=os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/cfg"):
     """Create a gripper object.
 
     Arguments:

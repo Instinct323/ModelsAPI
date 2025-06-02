@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import open3d as o3d
 
-import mesh_utils
+from . import mesh_utils
 
 
 # To fix GLIB open3d error:
