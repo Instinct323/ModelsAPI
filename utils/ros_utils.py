@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
     rosbag_to_images(ROOT / "scene-test.bag",
                      "/camera/color/image_raw",
-                     ROOT / "rgb", 20, "rgb8")
+                     ROOT / "rgb", 10, "rgb8")
     rosbag_to_images(ROOT / "scene-test.bag",
                      "/camera/aligned_depth_to_color/image_raw",
-                     ROOT / "depth", 20, "16UC1")
+                     ROOT / "depth", 10, "16UC1")

@@ -38,12 +38,14 @@ def rgbd_flow(w, h, fps=30, device_id=0):
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
+    root = "../runs/"
+
     for color, depth in rgbd_flow(640, 480, device_id=0):
         to_show = np.vstack((color, cv2.applyColorMap(
             cv2.convertScaleAbs(depth, alpha=0.03),
             cv2.COLORMAP_JET)))
-        cv2.imwrite("../runs/rs-c.png", color)
-        cv2.imwrite("../runs/rs-d.png", depth)
+        cv2.imwrite(root + "c.png", color)
+        cv2.imwrite(root + "d.png", depth)
         plt.imshow(to_show[..., ::-1])
         plt.pause(1e-3)
 

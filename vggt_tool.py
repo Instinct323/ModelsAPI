@@ -120,7 +120,7 @@ if __name__ == '__main__':
     depth_conf_thresh = 2.5
     vggt_ = VGGT()
 
-    colors_name = list(Path("/media/tongzj/Data/Information/Data/dataset/concept-graph/scene02/rgb").iterdir())[:50]
+    colors_name = list(Path("/media/tongzj/Data/Information/Data/dataset/concept-graph/scene01/rgb").iterdir())[:50]
     colors = load_and_preprocess_images(colors_name).to(DEVICE)
     query_points = torch.FloatTensor([[100.0, 200.0], [60.72, 259.94]]).to(DEVICE)
 

@@ -40,6 +40,7 @@ class SegmentAnythingV2:
                  image: np.ndarray,
                  **kwargs) -> sv.Detections:
         """ :param kwargs: use `prompt mode` if keyword parameters are provided, otherwise use `automatic mode` """
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         if kwargs:
             self.predictor.set_image(image)
             masks, scores, _ = self.predictor.predict(**kwargs, return_logits=False, multimask_output=False)

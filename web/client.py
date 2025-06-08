@@ -34,7 +34,7 @@ class FunctionsAPI:
         LOGGER.info(f"[{func}] {headers['cost']}, recv:{time.time() - float(headers['t-send']):.3f}s")
         return pickle.loads(response.content)
 
-    def invoke_async(self, func, *args, **kwargs):
+    def invoke_async(self, func, *args, **kwargs) -> concurrent.futures.Future:
         return self.executor.submit(self.invoke, func, *args, **kwargs)
 
 
