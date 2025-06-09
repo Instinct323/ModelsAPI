@@ -2,6 +2,7 @@
 
 - [Chatbot](https://openlm.ai/chatbot-arena/)
 - [LLM Benchmark](https://livebench.ai/#/)
+- [OmniSpatial](https://qizekun.github.io/omnispatial/)
 - [Zero-Shot Object Detection](https://paperswithcode.com/sota/zero-shot-object-detection-on-mscoco)
 
 # Installation

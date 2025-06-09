@@ -73,7 +73,7 @@ if __name__ == '__main__':
     from utils.camera import Camera
 
     model = DepthAnythingV2("vitb")
-    camera = Camera.from_yaml("cfg/RS-D435i.yaml")
+    camera = Camera.from_yaml("config/RS-D435i.yaml")
 
 
     def depth_mask(depth):

@@ -80,8 +80,7 @@ class VGGT:
         intrinsic = dict(fx=intrinsic[0], fy=intrinsic[4], cx=intrinsic[2], cy=intrinsic[5],
                          width=output["images"].shape[2], height=output["images"].shape[1],
                          depth_scale=depth_scale, depth_conf_thresh=depth_conf_thresh)
-        with (project_dir / "intrinsic.json").open("w") as f:
-            json.dump(intrinsic, f, indent=4)
+        (project_dir / "intrinsic.json").write_text(json.dumps(intrinsic, indent=4))
         # extrinsic
         pose_fmt = ("%.8f " * 12 + "%d " * 4)[:-1] + "\n"
         w2c = np.tile(np.eye(4, dtype=np.float32), (output["extrinsic"].shape[0], 1, 1))

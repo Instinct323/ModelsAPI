@@ -18,7 +18,7 @@ def to_colorful_pcd(pointmap: np.ndarray,
                     pcd: o3d.geometry.PointCloud = None):
     """
     :param pointmap: 2D dense field of points [H, W, 3]
-    :param color: RGB color [H, W, 3]
+    :param color: BGR color [H, W, 3]
     :param mask: mask of the points [H, W]
     """
     pcd = pcd or o3d.geometry.PointCloud()

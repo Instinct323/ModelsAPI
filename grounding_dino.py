@@ -17,13 +17,14 @@ class GroundingDINO:
     anno_label = sv.LabelAnnotator(smart_position=True)
 
     def __init__(self,
+                 encoder: str,
                  box_thresh: float = 0.35,
                  text_thresh: float = 0.25,
                  nms_iou: float = 0.5,
                  boxarea_thresh: float = 0.7):
         # Require to connect to Huggingface
-        # from groundingdino.config import GroundingDINO_SwinT_OGC as config
-        self.model = inference.Model("checkpoints/GroundingDINO_SwinT_OGC.py", "checkpoints/groundingdino_swint_ogc.pth")
+        # from groundingdino.config import GroundingDINO_SwinB_cfg
+        self.model = inference.Model(f"checkpoints/GroundingDINO_{encoder}.py", f"checkpoints/groundingdino_{encoder.lower()}.pth")
         self.box_thresh = box_thresh
         self.text_thresh = text_thresh
         self.nms_iou = nms_iou
@@ -51,9 +52,9 @@ class GroundingDINO:
 
 
 if __name__ == "__main__":
-    gdino = GroundingDINO()
+    gdino = GroundingDINO("SwinB_cogcoor")
 
-    image = cv2.imread("assets/color.png")
+    image = cv2.imread("assets/desktop-c.png")
 
     dets = gdino(image, "computer. jar. cup")
     print(dets)

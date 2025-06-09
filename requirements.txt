@@ -3,6 +3,7 @@ huggingface_hub
 jupyter
 matplotlib
 numpy<2
+openai
 opencv-python
 open3d
 pyrealsense2

@@ -30,10 +30,10 @@ class SegmentAnythingV2:
         checkpoint = f"checkpoints/sam2.1_hiera_{encoder}.pt"
         model_cfg = f"configs/sam2.1/sam2.1_hiera_{encoder_type[encoder]}.yaml"
 
-        sam2 = build_sam2(model_cfg, checkpoint)
-        self.predictor = SAM2ImagePredictor(sam2, mask_threshold=mask_thresh, max_sprinkle_area=max_sprinkle_area)
+        self.model = build_sam2(model_cfg, checkpoint)
+        self.predictor_getter = lambda: SAM2ImagePredictor(self.model, mask_threshold=mask_thresh, max_sprinkle_area=max_sprinkle_area)
         # self.video_predictor = build_sam2_video_predictor(model_cfg, checkpoint)
-        self.auto_predictor = SAM2AutomaticMaskGenerator(sam2, mask_threshold=mask_thresh,
+        self.auto_predictor = SAM2AutomaticMaskGenerator(self.model, mask_threshold=mask_thresh,
                                                          points_per_side=points_per_side, min_mask_region_area=max_sprinkle_area)
 
     def __call__(self,
@@ -42,8 +42,9 @@ class SegmentAnythingV2:
         """ :param kwargs: use `prompt mode` if keyword parameters are provided, otherwise use `automatic mode` """
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         if kwargs:
-            self.predictor.set_image(image)
-            masks, scores, _ = self.predictor.predict(**kwargs, return_logits=False, multimask_output=False)
+            predictor = self.predictor_getter()
+            predictor.set_image(image)
+            masks, scores, _ = predictor.predict(**kwargs, return_logits=False, multimask_output=False)
             if masks.ndim > 3:
                 masks = masks.reshape(-1, *masks.shape[-2:])
                 scores = scores.reshape(-1)
@@ -65,7 +66,7 @@ if __name__ == '__main__':
 
     sam2 = SegmentAnythingV2("tiny")
 
-    image = cv2.imread("assets/color.png")
+    image = cv2.imread("assets/desktop-c.png")
     point = np.array([[310, 160]])
 
     # TODO: batch inference
@@ -80,7 +81,7 @@ if __name__ == '__main__':
         print(dets)
         cv2.imwrite("runs/sam2_all.png", sv_annotate(image, dets, anno_box=False))
 
-    for c, d in rgbd_flow(640, 480, show=False):
+    for c, d in rgbd_flow(640, 480):
         dets = sam2(c)
         print(dets.confidence)
         plt.imshow(sv_annotate(c, dets, anno_box=False))

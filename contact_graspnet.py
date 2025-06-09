@@ -11,6 +11,9 @@ from contact_graspnet_pytorch.visualization_utils_o3d import draw_grasps
 
 class GraspPoses(namedtuple("GraspPoses", ["T_grasp_cam", "scores", "contact_pts", "gripper_openings"])):
 
+    def __bool__(self):
+        return len(self[0] > 0)
+
     def filter(self, mask):
         """ Filter grasps based on a boolean mask. """
         return GraspPoses(*(x[mask] for x in self))
@@ -44,7 +47,7 @@ if __name__ == '__main__':
     camera = Pinhole(img_size=struct["depth"].shape[::-1],
                      intrinsics=struct["K"][[0, 1, 0, 1], [0, 1, 2, 2]])
     pointmap = camera.pointmap(struct["depth"]).astype(np.float32)
-    mask = (pointmap[..., 2] > 0) & (pointmap[..., 2] < 1.8)
+    mask = (pointmap[..., 2] > 0.2) & (pointmap[..., 2] < 1.8)
 
     # Infer grasp poses
     cgn = ContactGraspNet()
