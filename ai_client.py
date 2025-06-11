@@ -34,8 +34,12 @@ class AIclient:
 QwenClient = partial(AIclient,
                      api_key=os.getenv("DASHSCOPE_API_KEY"),
                      base_url="https://dashscope.aliyuncs.com/compatible-mode/v1")
+# Model: gpt-4o
+ChatGPTclient = partial(AIclient,
+                        api_key=os.getenv("OPENAI_API_KEY"),
+                        base_url='https://xiaoai.plus/v1')
 
 if __name__ == '__main__':
     qwen = QwenClient("qwen-vl-max-latest")
 
-    print(qwen.query_once(128, text="这些图描绘了什么内容？", image=cv2.imread("assets/color.png")))
+    print(qwen.query_once(128, text="这些图描绘了什么内容？", image=cv2.imread("assets/desktop-c.png")))
